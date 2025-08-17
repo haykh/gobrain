@@ -84,6 +84,11 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 		case key.Matches(msg, keys.Select):
 			switch m.cursor {
 
+			case DailyNotes:
+				return func() tea.Msg {
+					return ui.NavigateFwdMsg{NewPanel: ui.PanelCalendar}
+				}
+
 			case RandomNotes:
 				return func() tea.Msg {
 					return ui.NavigateFwdMsg{NewPanel: ui.PanelRandomNotes}

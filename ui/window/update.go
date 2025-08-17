@@ -43,6 +43,18 @@ func (w Window) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 
+	case ui.ErrorMsg:
+		if msg.Error != nil {
+			w.DebugLog(fmt.Sprintf("Error: %v", msg.Error))
+			return w, tea.Quit
+		} else {
+			return w, nil
+		}
+
+	case ui.DebugMsg:
+		w.DebugLog(msg.Message)
+		return w, nil
+
 	case ui.NavigateFwdMsg:
 		if msg.NewPanel != w.active_panel {
 			w.active_panel = msg.NewPanel
@@ -104,14 +116,6 @@ func (w Window) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		w.panels[w.active_panel].Sync()
 		return w, nil
-
-	case ui.ErrorMsg:
-		if msg.Error != nil {
-			w.DebugLog(fmt.Sprintf("Error: %v", msg.Error))
-			return w, tea.Quit
-		} else {
-			return w, nil
-		}
 
 	case tea.KeyMsg:
 		switch {

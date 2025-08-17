@@ -8,6 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/haykh/gobrain/backend"
 	"github.com/haykh/gobrain/ui"
+	"github.com/haykh/gobrain/ui/window/calendar"
 	"github.com/haykh/gobrain/ui/window/dashboard"
 	"github.com/haykh/gobrain/ui/window/randnotes"
 )
@@ -36,10 +37,11 @@ type Window struct {
 
 func New(app *backend.Backend, show_help bool, debug bool) Window {
 	dashboard_panel := dashboard.New(app)
+	calendar_panel := calendar.New(app)
 	randnotes_panel := randnotes.New(app)
-	// randnotes_mdviewer_panel := mdviewer.New(app, &randnotes_panel, ui.PanelRandomNotes)
 	panels := map[ui.PanelType]ui.PanelView{
 		ui.PanelDashboard:   &dashboard_panel,
+		ui.PanelCalendar:    &calendar_panel,
 		ui.PanelRandomNotes: &randnotes_panel,
 	}
 	window := Window{

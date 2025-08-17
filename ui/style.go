@@ -67,6 +67,15 @@ const (
 	Color_RandomNotes_HighlightBorder = lipgloss.Color("7")
 
 	/**
+	 * Calendar Window
+	 **/
+	//// Colors
+	Color_Fg_Calendar_Helper              = lipgloss.Color("0")
+	Color_Border_CalendarDay_Today        = lipgloss.Color("63")
+	Color_Border_CalendarDay_Today_Active = lipgloss.Color("69")
+	Color_Bg_CalendarDay_Active           = lipgloss.Color("239")
+
+	/**
 	 * Common Elements
 	**/
 	Color_Scrollbar = lipgloss.Color("237")
