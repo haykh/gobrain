@@ -84,17 +84,19 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 			return nil
 
 		case key.Matches(msg, keys.Select):
+			note := m.filtered_notes[note_idx]
 			return func() tea.Msg {
 				return ui.NewViewer{
-					Filepath: m.app.RandomNotesPath,
-					Filename: m.filtered_notes[note_idx].Filename,
+					Filepath: note.Path,
+					Filename: note.Filename,
 				}
 			}
 
 		case key.Matches(msg, keys.Edit):
+			note := m.filtered_notes[note_idx]
 			return func() tea.Msg {
 				return ui.OpenEditorMsg{
-					Filename: filepath.Join(m.app.RandomNotesPath, m.filtered_notes[note_idx].Filename),
+					Filename: filepath.Join(note.Path, note.Filename),
 				}
 			}
 
@@ -116,9 +118,11 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 			return nil
 
 		case key.Matches(msg, keys.Delete):
+			note := m.filtered_notes[note_idx]
 			return func() tea.Msg {
-				return ui.TrashRandomNoteMsg{
-					Filename: m.filtered_notes[m.cursor.NoteIndex].Filename,
+				return ui.TrashNoteMsg{
+					Filepath: note.Path,
+					Filename: note.Filename,
 				}
 			}
 		}
@@ -145,23 +149,35 @@ func (m *model) Filter() {
 	}
 	m.note_view_idx_min = 0
 	m.note_view_idx_max = min(int(ui.Height_Window/2), len(m.filtered_notes))
-	if m.cursor.NoteIndex >= m.note_view_idx_max {
-		m.note_view_idx_min = m.note_view_idx_max - m.note_view_idx_min
-		m.note_view_idx_max = m.cursor.NoteIndex + 1
+	if m.cursor.NoteIndex >= len(m.filtered_notes) {
+		m.cursor.NoteIndex = len(m.filtered_notes) - 1
+	}
+	if m.cursor.TagIndex >= len(m.filtered_notes[m.cursor.NoteIndex].Tags) {
+		m.cursor.TagIndex = len(m.filtered_notes[m.cursor.NoteIndex].Tags) - 1
 	}
 }
 
 func (m *model) Sync() {
-	filenames, err := m.app.GetMarkdownFilenames(m.app.RandomNotesPath)
+	filenames_rnd, err := m.app.GetMarkdownFilenames(m.app.RandomNotesPath)
 	if err != nil {
 		panic("Could not get random notes filenames: " + err.Error())
 	}
+	filenames_dly, err := m.app.GetMarkdownFilenames(m.app.DailyNotesPath)
+	if err != nil {
+		panic("Could not get daily notes filenames: " + err.Error())
+	}
 	m.notes = []note.Note{}
-	for _, filename := range filenames {
-		if title, icon, tags, created, err := backend.ParseMarkdownNote(m.app.RandomNotesPath, filename); err != nil {
+	for fi, filename := range append(filenames_rnd, filenames_dly...) {
+		var path string
+		if fi < len(filenames_rnd) {
+			path = m.app.RandomNotesPath
+		} else {
+			path = m.app.DailyNotesPath
+		}
+		if title, icon, tags, created, err := backend.ParseMarkdownNote(path, filename); err != nil {
 			panic("Could not parse random note: " + err.Error())
 		} else {
-			n := note.New(filename, title, icon, tags, created)
+			n := note.New(filename, path, title, icon, tags, created)
 			m.notes = append(m.notes, n)
 		}
 	}

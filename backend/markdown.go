@@ -113,6 +113,19 @@ func ReadMarkdownNote(path, name string) (string, error) {
 	return strings.TrimSpace(content), nil
 }
 
+func AddTitleMarkdownNote(path, name, title string) error {
+	file, err := os.OpenFile(filepath.Join(path, name), os.O_RDWR, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	if _, err := fmt.Fprintf(file, "\n# %s\n", title); err != nil {
+		return fmt.Errorf("could not write title to markdown note: %v", err)
+	}
+	return nil
+}
+
 func AddMetadataMarkdownNote(path, name, metadata string, value any) error {
 	file, err := os.OpenFile(filepath.Join(path, name), os.O_RDWR, 0644)
 	if err != nil {
@@ -158,7 +171,7 @@ func AddMetadataMarkdownNote(path, name, metadata string, value any) error {
 	for key, val := range metadataMap {
 		newMetadataBlock.WriteString(fmt.Sprintf("%s = %s\n", key, val))
 	}
-	newMetadataBlock.WriteString("+++\n")
+	newMetadataBlock.WriteString("+++\n\n")
 
 	newContent := newMetadataBlock.String() + body
 

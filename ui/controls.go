@@ -60,7 +60,8 @@ type OpenEditorMsg struct {
 	Filename string
 }
 
-type TrashRandomNoteMsg struct {
+type TrashNoteMsg struct {
+	Filepath string
 	Filename string
 }
 

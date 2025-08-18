@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -14,7 +15,8 @@ type Backend struct {
 	TasksPath       string
 	RandomNotesPath string
 
-	TrashPath string
+	TrashPath      string
+	TrashDailyPath string
 }
 
 func New(path ...string) *Backend {
@@ -35,11 +37,12 @@ func New(path ...string) *Backend {
 		TasksPath:       filepath.Join(main_path, "tasks"),
 		RandomNotesPath: filepath.Join(main_path, "random_notes"),
 		TrashPath:       filepath.Join(main_path, ".trash"),
+		TrashDailyPath:  filepath.Join(main_path, ".trash", "daily_notes"),
 	}
 }
 
 func (b Backend) Init() {
-	for _, path := range []string{b.MainPath, b.DailyNotesPath, b.TasksPath, b.RandomNotesPath, b.TrashPath} {
+	for _, path := range []string{b.MainPath, b.DailyNotesPath, b.TasksPath, b.RandomNotesPath, b.TrashPath, b.TrashDailyPath} {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			if err := os.MkdirAll(path, os.ModePerm); err != nil {
 				panic("Could not create child directory: " + err.Error())
@@ -70,6 +73,22 @@ func (b Backend) CreateNew_DailyNote(date time.Time) (string, error) {
 		return "", fmt.Errorf("could not create daily note: %v", err)
 	}
 	file.Close()
+
+	if err := AddTitleMarkdownNote(b.DailyNotesPath, filename, date.Format("Jan 2 2006")); err != nil {
+		return "", fmt.Errorf("could not add title to daily note: %v", err)
+	}
+
+	if err := AddMetadataMarkdownNote(b.DailyNotesPath, filename, "created", date.Format(time.RFC3339)); err != nil {
+		return "", fmt.Errorf("could not add created metadata to daily note: %v", err)
+	}
+
+	if err := AddMetadataMarkdownNote(b.DailyNotesPath, filename, "icon", "\"󰃭\""); err != nil {
+		return "", fmt.Errorf("could not add icon to daily note: %v", err)
+	}
+
+	if err := AddMetadataMarkdownNote(b.DailyNotesPath, filename, "tags", []string{"\"daily\""}); err != nil {
+		return "", fmt.Errorf("could not add tags to daily note: %v", err)
+	}
 
 	return filename, nil
 }
@@ -112,16 +131,20 @@ func (b Backend) CreateNew_RandomNote() (string, error) {
 	return filename, nil
 }
 
-func (b Backend) Trash_RandomNote(filename string) error {
-	filename_full := filepath.Join(b.RandomNotesPath, filename)
+func (b Backend) TrashNote(filename, path string) error {
+	filename_full := filepath.Join(path, filename)
 	if _, err := os.Stat(filename_full); os.IsNotExist(err) {
 		return fmt.Errorf("file does not exist: %s", filename_full)
 	}
-	if err := AddMetadataMarkdownNote(b.RandomNotesPath, filename, "trashed", time.Now().Format(time.RFC3339)); err != nil {
+	if err := AddMetadataMarkdownNote(path, filename, "trashed", time.Now().Format(time.RFC3339)); err != nil {
 		return fmt.Errorf("could not add trashed metadata to random note: %v", err)
 	}
+	trash_path := b.TrashPath
+	if strings.HasSuffix(path, "daily_notes") {
+		trash_path = b.TrashDailyPath
+	}
 	for i := 1; i < 100; i++ {
-		filename_trash_full := filepath.Join(b.TrashPath, filename)
+		filename_trash_full := filepath.Join(trash_path, filename)
 		if i > 1 {
 			ext := filepath.Ext(filename_trash_full)
 			filename_trash_full = filename_trash_full[:len(filename_trash_full)-len(ext)]

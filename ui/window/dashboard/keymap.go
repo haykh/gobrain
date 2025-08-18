@@ -10,6 +10,7 @@ type keyMap struct {
 	Down   key.Binding
 	Left   key.Binding
 	Right  key.Binding
+	Edit   key.Binding
 	Select key.Binding
 	Help   key.Binding
 	Quit   key.Binding
@@ -22,7 +23,7 @@ func (k keyMap) ShortHelp() []key.Binding {
 func (k keyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Up, k.Down, k.Left, k.Right},
-		{k.Select, k.Help, k.Quit},
+		{k.Select, k.Edit, k.Help, k.Quit},
 	}
 }
 
@@ -31,6 +32,7 @@ var keys = keyMap{
 	Down:   ui.Key_Down,
 	Left:   ui.Key_Left,
 	Right:  ui.Key_Right,
+	Edit:   ui.Key_Edit,
 	Select: ui.Key_Select,
 	Help:   ui.Key_Help,
 	Quit:   ui.Key_Quit,

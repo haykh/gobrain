@@ -12,15 +12,17 @@ import (
 
 type Note struct {
 	Filename string
+	Path     string
 	Title    string
 	Icon     string
 	Tags     []string
 	Created  time.Time
 }
 
-func New(fname, title, icon string, tags []string, created time.Time) Note {
+func New(fname, path, title, icon string, tags []string, created time.Time) Note {
 	return Note{
 		Filename: fname,
+		Path:     path,
 		Title:    title,
 		Icon:     icon,
 		Tags:     tags,

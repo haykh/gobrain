@@ -2,6 +2,8 @@ package dashboard
 
 import (
 	"path/filepath"
+	"slices"
+	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
@@ -81,12 +83,57 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 			m.cursor = navigate(m.cursor, ui.DirRight)
 			return nil
 
+		case key.Matches(msg, keys.Edit):
+			switch m.cursor {
+
+			case TodaysNote:
+				today_str := time.Now().Format("2006-Jan-02") + ".md"
+				daily_notes, err := m.app.GetMarkdownFilenames(m.app.DailyNotesPath)
+				if err != nil {
+					return func() tea.Msg {
+						return ui.ErrorMsg{Error: err}
+					}
+				}
+				if !slices.Contains(daily_notes, today_str) {
+					fname, err := m.app.CreateNew_DailyNote(time.Now())
+					if err != nil {
+						return func() tea.Msg {
+							return ui.ErrorMsg{Error: err}
+						}
+					}
+					today_str = fname
+				}
+				return func() tea.Msg {
+					return ui.OpenEditorMsg{
+						Filename: filepath.Join(m.app.DailyNotesPath, today_str),
+					}
+				}
+
+			}
+
 		case key.Matches(msg, keys.Select):
 			switch m.cursor {
 
 			case DailyNotes:
 				return func() tea.Msg {
 					return ui.NavigateFwdMsg{NewPanel: ui.PanelCalendar}
+				}
+
+			case TodaysNote:
+				today_str := time.Now().Format("2006-Jan-02") + ".md"
+				daily_notes, err := m.app.GetMarkdownFilenames(m.app.DailyNotesPath)
+				if err != nil {
+					return func() tea.Msg {
+						return ui.ErrorMsg{Error: err}
+					}
+				}
+				if slices.Contains(daily_notes, today_str) {
+					return func() tea.Msg {
+						return ui.NewViewer{
+							Filepath: m.app.DailyNotesPath,
+							Filename: today_str,
+						}
+					}
 				}
 
 			case RandomNotes:

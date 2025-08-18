@@ -109,8 +109,8 @@ func (w Window) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return w, nil
 
-	case ui.TrashRandomNoteMsg:
-		if err := w.app.Trash_RandomNote(msg.Filename); err != nil {
+	case ui.TrashNoteMsg:
+		if err := w.app.TrashNote(msg.Filename, msg.Filepath); err != nil {
 			w.DebugLog(fmt.Sprintf("Error trashing random note: %v", err))
 			return w, tea.Quit
 		}
