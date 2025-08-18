@@ -73,6 +73,7 @@ const (
 	Color_Fg_Calendar_Helper              = lipgloss.Color("0")
 	Color_Border_CalendarDay_Today        = lipgloss.Color("63")
 	Color_Border_CalendarDay_Today_Active = lipgloss.Color("69")
+	Color_Fg_CalendarDay_OtherMonth       = lipgloss.Color("240")
 	Color_Bg_CalendarDay_Active           = lipgloss.Color("239")
 
 	/**

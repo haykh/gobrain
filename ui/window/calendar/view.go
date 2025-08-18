@@ -13,6 +13,11 @@ func isToday(date time.Time) bool {
 	return date.Year() == today.Year() && date.Month() == today.Month() && date.Day() == today.Day()
 }
 
+func isThisMonth(date time.Time) bool {
+	today := time.Now()
+	return date.Year() == today.Year() && date.Month() == today.Month()
+}
+
 func (c CalendarDay) View(is_highlighted bool) string {
 	day_view := c.Date.Format("2")
 	note_view := ""
@@ -21,12 +26,20 @@ func (c CalendarDay) View(is_highlighted bool) string {
 	}
 	width := int(math.Floor(float64(ui.Width_Window)/float64(7)) - 4)
 	style := lipgloss.NewStyle().Border(lipgloss.RoundedBorder())
+	if !isThisMonth(c.Date) {
+		style = style.BorderForeground(ui.Color_Fg_CalendarDay_OtherMonth)
+		style = style.Foreground(ui.Color_Fg_CalendarDay_OtherMonth)
+	}
 	if isToday(c.Date) {
 		style = style.BorderForeground(ui.Color_Border_CalendarDay_Today)
 	}
 	if is_highlighted {
 		if isToday(c.Date) {
 			style = style.BorderForeground(ui.Color_Border_CalendarDay_Today_Active)
+		}
+		if !isThisMonth(c.Date) {
+			style = style.BorderForeground(lipgloss.Color("7"))
+			style = style.Foreground(lipgloss.Color("7"))
 		}
 		style = style.BorderBackground(ui.Color_Bg_CalendarDay_Active)
 		style = style.Background(ui.Color_Bg_CalendarDay_Active)
@@ -44,13 +57,13 @@ func (c CalendarDay) View(is_highlighted bool) string {
 	)
 }
 
-func monthColumn(months []string) string {
+func monthColumn(months []string, left_margin, right_margin int) string {
 	month_fmt := []string{}
 	for _, month := range months {
 		month_fmt = append(
 			month_fmt,
 			lipgloss.NewStyle().
-				Margin(2, 2, 2, 2).
+				Margin(2, right_margin, 2, left_margin).
 				Foreground(ui.Color_Fg_Calendar_Helper).
 				Render(month),
 		)
@@ -93,19 +106,25 @@ func (c model) View() string {
 
 	return lipgloss.JoinVertical(
 		lipgloss.Top,
-		lipgloss.NewStyle().MarginLeft(3).Render(
+		lipgloss.NewStyle().
+			MarginLeft(3).
+			MarginTop(2).
+			Render(
+				lipgloss.JoinHorizontal(
+					lipgloss.Left,
+					weekdays_fmt...,
+				)),
+		lipgloss.NewStyle().
+			MarginBottom(2).Render(
 			lipgloss.JoinHorizontal(
-				lipgloss.Left,
-				weekdays_fmt...,
-			)),
-		lipgloss.JoinHorizontal(
-			lipgloss.Top,
-			monthColumn(left_months),
-			lipgloss.JoinVertical(
-				lipgloss.Left,
-				weeks...,
+				lipgloss.Top,
+				monthColumn(left_months, 5, 2),
+				lipgloss.JoinVertical(
+					lipgloss.Left,
+					weeks...,
+				),
+				monthColumn(right_months, 2, 5),
 			),
-			monthColumn(right_months),
 		),
 	)
 }

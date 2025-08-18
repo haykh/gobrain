@@ -15,7 +15,6 @@ type CalendarDay struct {
 
 type model struct {
 	keymap         help.KeyMap
-	today          time.Time
 	shown_date_min time.Time
 	shown_date_max time.Time
 	cursor         int
@@ -26,17 +25,15 @@ type model struct {
 }
 
 func New(app *backend.Backend) model {
-	today := time.Now()
-	shown_date_min := today.AddDate(0, 0, -int(today.Weekday())-13)
-	shown_data_max := today.AddDate(0, 0, 7-int(today.Weekday())+15)
-	return model{
+	m := model{
 		keymap:         keys,
-		today:          today,
-		shown_date_min: shown_date_min,
-		shown_date_max: shown_data_max,
+		shown_date_min: time.Time{},
+		shown_date_max: time.Time{},
 		cursor:         0,
 		app:            app,
 	}
+	m.Reset()
+	return m
 }
 
 func (m model) Path() []string {

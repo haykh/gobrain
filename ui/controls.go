@@ -83,7 +83,7 @@ var Key_Right = key.NewBinding(
 )
 var Key_Select = key.NewBinding(
 	key.WithKeys("enter", " "),
-	key.WithHelp("enter/space", "select"),
+	key.WithHelp("↵/␣", "select"),
 )
 var Key_Edit = key.NewBinding(
 	key.WithKeys("e"),
@@ -92,6 +92,10 @@ var Key_Edit = key.NewBinding(
 var Key_Delete = key.NewBinding(
 	key.WithKeys("delete", "d"),
 	key.WithHelp("del/d", "delete"),
+)
+var Key_Reset = key.NewBinding(
+	key.WithKeys("r"),
+	key.WithHelp("r", "reset"),
 )
 var Key_Filter = key.NewBinding(
 	key.WithKeys("f"),

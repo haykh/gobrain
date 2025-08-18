@@ -152,7 +152,7 @@ func (m *model) Filter() {
 }
 
 func (m *model) Sync() {
-	filenames, err := m.app.GetFilepaths_RandomNotes()
+	filenames, err := m.app.GetMarkdownFilenames(m.app.RandomNotesPath)
 	if err != nil {
 		panic("Could not get random notes filenames: " + err.Error())
 	}

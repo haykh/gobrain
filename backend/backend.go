@@ -48,10 +48,10 @@ func (b Backend) Init() {
 	}
 }
 
-func (b Backend) GetFilepaths_RandomNotes() ([]string, error) {
-	files, err := os.ReadDir(b.RandomNotesPath)
+func (b Backend) GetMarkdownFilenames(path string) ([]string, error) {
+	files, err := os.ReadDir(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not read daily notes directory: %v", err)
 	}
 	var filenames []string
 	for _, file := range files {
@@ -60,6 +60,18 @@ func (b Backend) GetFilepaths_RandomNotes() ([]string, error) {
 		}
 	}
 	return filenames, nil
+}
+
+func (b Backend) CreateNew_DailyNote(date time.Time) (string, error) {
+	filename := fmt.Sprintf("%s.md", date.Format("2006-Jan-02"))
+	filaneme_full := filepath.Join(b.DailyNotesPath, filename)
+	file, err := os.Create(filaneme_full)
+	if err != nil {
+		return "", fmt.Errorf("could not create daily note: %v", err)
+	}
+	file.Close()
+
+	return filename, nil
 }
 
 func (b Backend) CreateNew_RandomNote() (string, error) {
