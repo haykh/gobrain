@@ -133,6 +133,9 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 
 func (m *model) Filter() {
 	m.filtered_notes = []*note.Note{}
+	if len(m.notes) == 0 {
+		return
+	}
 	for ni, n := range m.notes {
 		if ni == m.cursor.NoteIndex {
 			m.cursor.NoteIndex = len(m.filtered_notes)
