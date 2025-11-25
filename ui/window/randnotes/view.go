@@ -4,6 +4,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/haykh/gobrain/components"
 	"github.com/haykh/gobrain/ui"
+	"github.com/haykh/gobrain/ui/window/randnotes/note"
 )
 
 func (m model) View() string {
@@ -14,7 +15,8 @@ func (m model) View() string {
 	for i := m.note_view_idx_min; i < m.note_view_idx_max; i++ {
 		n_views = append(
 			n_views,
-			m.filtered_notes[i].View(
+			note.View(
+				*m.filtered_notes[i],
 				ui.Width_Window-1,
 				m.cursor.NoteIndex == i,
 				m.cursor.TagIndex,

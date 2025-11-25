@@ -29,7 +29,7 @@ func (m *model) ResetCursor() {
 
 func (m *model) Sync() {
 	m.calendar_days = []CalendarDay{}
-	filenames, err := m.app.GetMarkdownFilenames(m.app.DailyNotesPath)
+	filenames, err := m.app.GetMarkdownFilenames(m.app.DailyNotes)
 	if err != nil {
 		panic("Could not get markdown filenames: " + err.Error())
 	}
@@ -91,7 +91,7 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 			if m.calendar_days[m.cursor].NoteExists {
 				return func() tea.Msg {
 					return ui.NewViewer{
-						Filepath: m.app.DailyNotesPath,
+						Filepath: m.app.DailyNotes,
 						Filename: m.calendar_days[m.cursor].Date.Format("2006-Jan-02") + ".md",
 					}
 				}
@@ -114,7 +114,7 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 			}
 			return func() tea.Msg {
 				return ui.OpenEditorMsg{
-					Filename: filepath.Join(m.app.DailyNotesPath, fname),
+					Filename: filepath.Join(m.app.DailyNotes, fname),
 				}
 			}
 

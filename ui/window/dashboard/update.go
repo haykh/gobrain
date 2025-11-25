@@ -88,7 +88,7 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 
 			case TodaysNote:
 				today_str := time.Now().Format("2006-Jan-02") + ".md"
-				daily_notes, err := m.app.GetMarkdownFilenames(m.app.DailyNotesPath)
+				daily_notes, err := m.app.GetMarkdownFilenames(m.app.DailyNotes)
 				if err != nil {
 					return func() tea.Msg {
 						return ui.ErrorMsg{Error: err}
@@ -105,7 +105,7 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 				}
 				return func() tea.Msg {
 					return ui.OpenEditorMsg{
-						Filename: filepath.Join(m.app.DailyNotesPath, today_str),
+						Filename: filepath.Join(m.app.DailyNotes, today_str),
 					}
 				}
 
@@ -121,7 +121,7 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 
 			case TodaysNote:
 				today_str := time.Now().Format("2006-Jan-02") + ".md"
-				daily_notes, err := m.app.GetMarkdownFilenames(m.app.DailyNotesPath)
+				daily_notes, err := m.app.GetMarkdownFilenames(m.app.DailyNotes)
 				if err != nil {
 					return func() tea.Msg {
 						return ui.ErrorMsg{Error: err}
@@ -130,7 +130,7 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 				if slices.Contains(daily_notes, today_str) {
 					return func() tea.Msg {
 						return ui.NewViewer{
-							Filepath: m.app.DailyNotesPath,
+							Filepath: m.app.DailyNotes,
 							Filename: today_str,
 						}
 					}
@@ -149,7 +149,7 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 			case NewRandomNote:
 				if newfile, err := m.app.CreateNew_RandomNote(); err == nil {
 					return func() tea.Msg {
-						return ui.OpenEditorMsg{Filename: filepath.Join(m.app.RandomNotesPath, newfile)}
+						return ui.OpenEditorMsg{Filename: filepath.Join(m.app.RandomNotes, newfile)}
 					}
 				} else {
 					return func() tea.Msg {
