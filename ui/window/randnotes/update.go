@@ -125,6 +125,17 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 					Filename: note.Filename,
 				}
 			}
+
+		case key.Matches(msg, keys.Add):
+			if newfile, err := m.app.CreateNew_RandomNote(); err == nil {
+				return func() tea.Msg {
+					return ui.OpenEditorMsg{Filename: filepath.Join(m.app.RandomNotesPath, newfile)}
+				}
+			} else {
+				return func() tea.Msg {
+					return ui.ErrorMsg{Error: err}
+				}
+			}
 		}
 
 	}

@@ -77,6 +77,13 @@ const (
 	Color_Bg_CalendarDay_Active           = lipgloss.Color("0")
 
 	/**
+	* Tasklist Window
+	**/
+	Color_Fg_Tasklist_Done = lipgloss.Color("240")
+	Color_Fg_Checkmark     = lipgloss.Color("34")
+	Color_Fg_Braces        = lipgloss.Color("241")
+
+	/**
 	 * Common Elements
 	**/
 	Color_Scrollbar = lipgloss.Color("237")

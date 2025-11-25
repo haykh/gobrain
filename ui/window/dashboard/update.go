@@ -136,6 +136,11 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 					}
 				}
 
+			case TaskLists:
+				return func() tea.Msg {
+					return ui.NavigateFwdMsg{NewPanel: ui.PanelTaskLists}
+				}
+
 			case RandomNotes:
 				return func() tea.Msg {
 					return ui.NavigateFwdMsg{NewPanel: ui.PanelRandomNotes}

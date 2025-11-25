@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/haykh/gobrain/backend"
@@ -11,6 +12,7 @@ import (
 	"github.com/haykh/gobrain/ui/window/calendar"
 	"github.com/haykh/gobrain/ui/window/dashboard"
 	"github.com/haykh/gobrain/ui/window/randnotes"
+	"github.com/haykh/gobrain/ui/window/tasklist"
 )
 
 type Window struct {
@@ -20,6 +22,9 @@ type Window struct {
 
 	weather              string
 	weather_last_updated time.Time
+
+	typing_input textinput.Model
+	is_typing    bool
 
 	show_help bool
 	help      help.Model
@@ -38,9 +43,11 @@ type Window struct {
 func New(app *backend.Backend, show_help bool, debug bool) Window {
 	dashboard_panel := dashboard.New(app)
 	calendar_panel := calendar.New(app)
+	tasklists_panel := tasklist.New(app)
 	randnotes_panel := randnotes.New(app)
 	panels := map[ui.PanelType]ui.PanelView{
 		ui.PanelDashboard:   &dashboard_panel,
+		ui.PanelTaskLists:   &tasklists_panel,
 		ui.PanelCalendar:    &calendar_panel,
 		ui.PanelRandomNotes: &randnotes_panel,
 	}
@@ -51,6 +58,8 @@ func New(app *backend.Backend, show_help bool, debug bool) Window {
 
 		weather:              "",
 		weather_last_updated: time.Time{},
+
+		is_typing: false,
 
 		show_help: show_help,
 		help:      help.New(),
@@ -69,7 +78,7 @@ func New(app *backend.Backend, show_help bool, debug bool) Window {
 }
 
 func (w Window) Init() tea.Cmd {
-	return nil
+	return textinput.Blink
 }
 
 func (w Window) Active() ui.PanelView {

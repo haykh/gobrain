@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/charmbracelet/bubbles/textinput"
 )
 
 type Backend struct {
@@ -15,8 +17,11 @@ type Backend struct {
 	TasksPath       string
 	RandomNotesPath string
 
-	TrashPath      string
-	TrashDailyPath string
+	TrashPath         string
+	TrashDailyPath    string
+	TrashTasklistPath string
+
+	TypingInput textinput.Model
 }
 
 func New(path ...string) *Backend {
@@ -32,17 +37,20 @@ func New(path ...string) *Backend {
 		main_path = filepath.Join(homedir, ".gobrain")
 	}
 	return &Backend{
-		MainPath:        main_path,
-		DailyNotesPath:  filepath.Join(main_path, "daily_notes"),
-		TasksPath:       filepath.Join(main_path, "tasks"),
-		RandomNotesPath: filepath.Join(main_path, "random_notes"),
-		TrashPath:       filepath.Join(main_path, ".trash"),
-		TrashDailyPath:  filepath.Join(main_path, ".trash", "daily_notes"),
+		MainPath:          main_path,
+		DailyNotesPath:    filepath.Join(main_path, "daily_notes"),
+		TasksPath:         filepath.Join(main_path, "tasks"),
+		RandomNotesPath:   filepath.Join(main_path, "random_notes"),
+		TrashPath:         filepath.Join(main_path, ".trash"),
+		TrashDailyPath:    filepath.Join(main_path, ".trash", "daily_notes"),
+		TrashTasklistPath: filepath.Join(main_path, ".trash", "tasks"),
+
+		TypingInput: textinput.New(),
 	}
 }
 
 func (b Backend) Init() {
-	for _, path := range []string{b.MainPath, b.DailyNotesPath, b.TasksPath, b.RandomNotesPath, b.TrashPath, b.TrashDailyPath} {
+	for _, path := range []string{b.MainPath, b.DailyNotesPath, b.TasksPath, b.RandomNotesPath, b.TrashPath, b.TrashDailyPath, b.TrashTasklistPath} {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			if err := os.MkdirAll(path, os.ModePerm); err != nil {
 				panic("Could not create child directory: " + err.Error())
@@ -143,6 +151,33 @@ func (b Backend) TrashNote(filename, path string) error {
 	if strings.HasSuffix(path, "daily_notes") {
 		trash_path = b.TrashDailyPath
 	}
+	for i := 1; i < 100; i++ {
+		filename_trash_full := filepath.Join(trash_path, filename)
+		if i > 1 {
+			ext := filepath.Ext(filename_trash_full)
+			filename_trash_full = filename_trash_full[:len(filename_trash_full)-len(ext)]
+			filename_trash_full = fmt.Sprintf("%s.v%02d%s", filename_trash_full, i, ext)
+		}
+		if _, err := os.Stat(filename_trash_full); os.IsNotExist(err) {
+			if err := os.Rename(filename_full, filename_trash_full); err != nil {
+				return fmt.Errorf("could not move file to trash: %v", err)
+			} else {
+				return nil
+			}
+		}
+	}
+	return fmt.Errorf("could not move file to trash, too many versions already exist: %s", filename)
+}
+
+func (b Backend) TrashTasklist(filename, path string) error {
+	filename_full := filepath.Join(path, filename)
+	if _, err := os.Stat(filename_full); os.IsNotExist(err) {
+		return fmt.Errorf("file does not exist: %s", filename_full)
+	}
+	if err := AddMetadataMarkdownNote(path, filename, "trashed", time.Now().Format(time.RFC3339)); err != nil {
+		return fmt.Errorf("could not add trashed metadata to random note: %v", err)
+	}
+	trash_path := b.TrashTasklistPath
 	for i := 1; i < 100; i++ {
 		filename_trash_full := filepath.Join(trash_path, filename)
 		if i > 1 {

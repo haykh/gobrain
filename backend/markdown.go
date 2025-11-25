@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -86,6 +87,115 @@ func ParseMarkdownNote(path, name string) (string, string, []string, time.Time, 
 	}
 
 	return title, icon, tags, created, nil
+}
+
+func ParseMarkdownTasklist(path, name string) (string, []string, []bool, []int, []time.Time, error) {
+	file, err := os.Open(filepath.Join(path, name))
+	if err != nil {
+		return "", nil, nil, nil, nil, err
+	}
+	defer file.Close()
+
+	var (
+		title       string
+		tasks       []string
+		checked     []bool
+		importances []int
+		dueDates    []time.Time
+	)
+
+	scanner := bufio.NewScanner(file)
+	inMetadata := false
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if strings.TrimSpace(line) == "+++" {
+			inMetadata = !inMetadata
+			continue
+		}
+
+		if strings.HasPrefix(line, "# ") && title == "" {
+			title = strings.TrimSpace(strings.TrimPrefix(line, "# "))
+			continue
+		}
+
+		pattern := regexp.MustCompile(`^- \[( |x)\] (.*?)( \{(\!*)\})?( \{([0-9]{4}-[0-9]{2}-[0-9]{2})?\})?$`)
+		matches := pattern.FindStringSubmatch(line)
+
+		var (
+			taskText   string
+			isChecked  bool
+			importance int
+			dueDate    time.Time
+		)
+		if len(matches) > 3 {
+			if matches[4] != "" {
+				importance = len(matches[4])
+			}
+		}
+		if len(matches) > 5 {
+			if matches[6] != "" {
+				dueDate, _ = time.Parse("2006-01-02", matches[6])
+			}
+		}
+		if len(matches) > 2 {
+			taskText = matches[2]
+			isChecked = matches[1] == "x" || matches[1] == "X"
+
+			tasks = append(tasks, taskText)
+			checked = append(checked, isChecked)
+			importances = append(importances, importance)
+			dueDates = append(dueDates, dueDate)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return "", nil, nil, nil, nil, err
+	}
+
+	if title == "" {
+		title = strings.TrimSuffix(name, filepath.Ext(name))
+	}
+
+	return title, tasks, checked, importances, dueDates, nil
+}
+
+func WriteMarkdownTasklist(path, name, title string, tasks []string, checked []bool, importances []int, dueDates []time.Time) error {
+	file, err := os.Create(filepath.Join(path, name))
+	if err != nil {
+		return fmt.Errorf("could not create markdown tasklist: %v", err)
+	}
+	defer file.Close()
+
+	writer := bufio.NewWriter(file)
+	if _, err := fmt.Fprintf(writer, "# %s\n\n", title); err != nil {
+		return fmt.Errorf("could not write title to markdown tasklist: %v", err)
+	}
+
+	for i, task := range tasks {
+		checkMark := " "
+		if checked[i] {
+			checkMark = "x"
+		}
+		importanceStr := ""
+		if importances[i] > 0 {
+			importanceStr = " {" + strings.Repeat("!", importances[i]) + "}"
+		}
+		dueDateStr := ""
+		if !dueDates[i].IsZero() {
+			dueDateStr = " {" + dueDates[i].Format("2006-01-02") + "}"
+		}
+		if _, err := fmt.Fprintf(writer, "- [%s] %s%s%s\n", checkMark, task, importanceStr, dueDateStr); err != nil {
+			return fmt.Errorf("could not write task to markdown tasklist: %v", err)
+		}
+	}
+
+	if err := writer.Flush(); err != nil {
+		return fmt.Errorf("could not flush markdown tasklist writer: %v", err)
+	}
+
+	return nil
 }
 
 func ReadMarkdownNote(path, name string) (string, error) {

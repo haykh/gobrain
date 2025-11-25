@@ -20,7 +20,7 @@ type PanelType int
 const (
 	PanelDashboard PanelType = iota
 	PanelCalendar
-	PanelTasklist
+	PanelTaskLists
 	PanelRandomNotes
 	PanelMdViewer
 )
@@ -65,6 +65,9 @@ type TrashNoteMsg struct {
 	Filename string
 }
 
+type TypingStartMsg struct{}
+type TypingEndMsg struct{}
+
 // Key bindings
 var Key_Up = key.NewBinding(
 	key.WithKeys("up", "k"),
@@ -86,13 +89,17 @@ var Key_Select = key.NewBinding(
 	key.WithKeys("enter", " "),
 	key.WithHelp("↵/␣", "select"),
 )
+var Key_Add = key.NewBinding(
+	key.WithKeys("a"),
+	key.WithHelp("a", "add/create"),
+)
 var Key_Edit = key.NewBinding(
 	key.WithKeys("e"),
 	key.WithHelp("e", "edit"),
 )
 var Key_Delete = key.NewBinding(
-	key.WithKeys("delete", "d"),
-	key.WithHelp("del/d", "delete"),
+	key.WithKeys("delete", "x"),
+	key.WithHelp("del/x", "delete"),
 )
 var Key_Reset = key.NewBinding(
 	key.WithKeys("r"),
@@ -101,6 +108,18 @@ var Key_Reset = key.NewBinding(
 var Key_Filter = key.NewBinding(
 	key.WithKeys("f"),
 	key.WithHelp("f", "filter"),
+)
+var Key_Toggle = key.NewBinding(
+	key.WithKeys("t"),
+	key.WithHelp("t", "toggle"),
+)
+var Key_PgUp = key.NewBinding(
+	key.WithKeys("pgup", "u"),
+	key.WithHelp("pgup/u", "page up"),
+)
+var Key_PgDown = key.NewBinding(
+	key.WithKeys("pgdown", "d"),
+	key.WithHelp("pgdn/d", "page down"),
 )
 var Key_Back = key.NewBinding(
 	key.WithKeys("backspace"),
@@ -113,4 +132,14 @@ var Key_Help = key.NewBinding(
 var Key_Quit = key.NewBinding(
 	key.WithKeys("q", "esc", "ctrl+c"),
 	key.WithHelp("q", "quit"),
+)
+
+// keys for typing input
+var Key_Cancel = key.NewBinding(
+	key.WithKeys("esc", "ctrl+c"),
+	key.WithHelp("esc/ctrl+c", "cancel"),
+)
+var Key_Accept = key.NewBinding(
+	key.WithKeys("enter"),
+	key.WithHelp("↵", "accept"),
 )
