@@ -7,56 +7,39 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/dustin/go-humanize"
+	"github.com/haykh/gobrain/backend"
 	"github.com/haykh/gobrain/ui"
 )
 
-type Note struct {
-	Filename string
-	Path     string
-	Title    string
-	Icon     string
-	Tags     []string
-	Created  time.Time
-}
+// View renders a backend.Note for the random-notes panel with styling and tag
+// highlighting. It keeps presentation logic close to the panel while relying
+// on the shared backend.Note data model.
+func View(n backend.Note, width int, isHighlighted bool, hlTagIdx int, filteredTag string) string {
+	iconStyle := lipgloss.NewStyle().Foreground(ui.Color_RandomNotes_Icon).MarginRight(1)
+	titleStyle := lipgloss.NewStyle()
 
-func New(fname, path, title, icon string, tags []string, created time.Time) Note {
-	return Note{
-		Filename: fname,
-		Path:     path,
-		Title:    title,
-		Icon:     icon,
-		Tags:     tags,
-		Created:  created,
-	}
-}
-
-func (n Note) View(width int, is_highlighted bool, hl_tag_idx int, filtered_tag string) string {
-	icon_style := lipgloss.NewStyle().Foreground(ui.Color_RandomNotes_Icon).MarginRight(1)
-
-	title_style := lipgloss.NewStyle()
-
-	if is_highlighted && hl_tag_idx == -1 {
-		title_style = title_style.Underline(true)
+	if isHighlighted && hlTagIdx == -1 {
+		titleStyle = titleStyle.Underline(true)
 	}
 
 	spacer := " "
 
-	icon := icon_style.Render(n.Icon)
-	title := title_style.Render(n.Title)
+	icon := iconStyle.Render(n.Icon)
+	title := titleStyle.Render(n.Title)
 
 	tags := "{"
 	for i, tag := range n.Tags {
 		tags += "#"
-		tags_style := lipgloss.NewStyle()
-		tags_style = tags_style.Foreground(ui.Color_RandomNotes_Tags)
-		if tag == filtered_tag {
-			tags_style = tags_style.Bold(true)
+		tagsStyle := lipgloss.NewStyle()
+		tagsStyle = tagsStyle.Foreground(ui.Color_RandomNotes_Tags)
+		if tag == filteredTag {
+			tagsStyle = tagsStyle.Bold(true)
 		}
 
-		if is_highlighted && i == hl_tag_idx {
-			tags += tags_style.Underline(true).Render(tag)
+		if isHighlighted && i == hlTagIdx {
+			tags += tagsStyle.Underline(true).Render(tag)
 		} else {
-			tags += tags_style.Render(tag)
+			tags += tagsStyle.Render(tag)
 		}
 		if i < len(n.Tags)-1 {
 			tags += ", "
@@ -74,7 +57,7 @@ func (n Note) View(width int, is_highlighted bool, hl_tag_idx int, filtered_tag 
 		strings.Repeat(spacer, width-(lipgloss.Width(icon)+lipgloss.Width(title)+lipgloss.Width(tags))-4),
 	)
 
-	first_line := lipgloss.JoinHorizontal(
+	firstLine := lipgloss.JoinHorizontal(
 		lipgloss.Top,
 		icon,
 		title,
@@ -82,14 +65,14 @@ func (n Note) View(width int, is_highlighted bool, hl_tag_idx int, filtered_tag 
 		tags,
 	)
 
-	var second_line string
+	var secondLine string
 	if n.Created.IsZero() {
-		second_line = lipgloss.NewStyle().
+		secondLine = lipgloss.NewStyle().
 			Foreground(ui.Color_Bg).Render(
 			strings.Repeat(spacer, width-4),
 		)
 	} else {
-		second_line = fmt.Sprintf("%s %s %s",
+		secondLine = fmt.Sprintf("%s %s %s",
 			lipgloss.NewStyle().
 				Foreground(ui.Color_Dividers).Render(
 				"  [ created ",
@@ -105,37 +88,50 @@ func (n Note) View(width int, is_highlighted bool, hl_tag_idx int, filtered_tag 
 		)
 		space = lipgloss.NewStyle().
 			Foreground(ui.Color_Bg).Render(
-			strings.Repeat(spacer, width-lipgloss.Width(second_line)-4),
+			strings.Repeat(spacer, width-lipgloss.Width(secondLine)-4),
 		)
 
-		second_line = lipgloss.JoinHorizontal(
+		secondLine = lipgloss.JoinHorizontal(
 			lipgloss.Top,
-			second_line,
+			secondLine,
 			space,
 		)
 	}
 
-	left_pad := "  \n  "
-	right_pad := left_pad
-	if is_highlighted {
-		left_pad = "⎧ \n⎩ "
-		right_pad = " ⎫\n ⎭"
+	leftPad := "  \n  "
+	rightPad := leftPad
+	if isHighlighted {
+		leftPad = "⎧ \n⎩ "
+		rightPad = " ⎫\n ⎭"
 	}
-	left_pad = lipgloss.NewStyle().
+	leftPad = lipgloss.NewStyle().
 		Foreground(ui.Color_RandomNotes_HighlightBorder).
-		Render(left_pad)
-	right_pad = lipgloss.NewStyle().
+		Render(leftPad)
+	rightPad = lipgloss.NewStyle().
 		Foreground(ui.Color_RandomNotes_HighlightBorder).
-		Render(right_pad)
+		Render(rightPad)
 
 	return lipgloss.JoinHorizontal(
 		lipgloss.Top,
-		left_pad,
+		leftPad,
 		lipgloss.JoinVertical(
 			lipgloss.Left,
-			first_line,
-			second_line,
+			firstLine,
+			secondLine,
 		),
-		right_pad,
+		rightPad,
 	)
+}
+
+// New assembles a backend.Note instance, keeping construction alongside the
+// rendering helpers for the random-notes panel.
+func New(fname, path, title, icon string, tags []string, created time.Time) backend.Note {
+	return backend.Note{
+		Filename: fname,
+		Path:     path,
+		Title:    title,
+		Icon:     icon,
+		Tags:     tags,
+		Created:  created,
+	}
 }

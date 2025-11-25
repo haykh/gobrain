@@ -4,7 +4,6 @@ import (
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/haykh/gobrain/backend"
 	"github.com/haykh/gobrain/ui"
-	"github.com/haykh/gobrain/ui/window/randnotes/note"
 )
 
 type Cursor struct {
@@ -15,8 +14,8 @@ type Cursor struct {
 
 type model struct {
 	keymap         help.KeyMap
-	notes          []note.Note
-	filtered_notes []*note.Note
+	notes          []backend.Note
+	filtered_notes []*backend.Note
 	cursor         Cursor
 
 	note_view_idx_min int
@@ -28,8 +27,8 @@ type model struct {
 func New(app *backend.Backend) model {
 	m := model{
 		keymap:         keys,
-		notes:          []note.Note{},
-		filtered_notes: []*note.Note{},
+		notes:          []backend.Note{},
+		filtered_notes: []*backend.Note{},
 		cursor:         Cursor{0, -1, ""},
 
 		note_view_idx_min: 0,

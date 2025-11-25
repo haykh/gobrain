@@ -6,20 +6,17 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/haykh/gobrain/backend"
 	"github.com/haykh/gobrain/ui"
 )
 
 type Task struct {
+	backend.TaskItem
 	index      int
 	list_index int
 	is_editing bool
 	input      *textinput.Model
 	old_text   string
-
-	Text       string
-	Checked    bool
-	Importance int
-	DueDate    time.Time
 }
 
 func (t Task) Type() string {
@@ -28,16 +25,17 @@ func (t Task) Type() string {
 
 func New(text string, checked bool, importance int, dueDate time.Time, index, list_index int) Task {
 	return Task{
+		TaskItem: backend.TaskItem{
+			Text:       text,
+			Checked:    checked,
+			Importance: importance,
+			DueDate:    dueDate,
+		},
 		index:      index,
 		list_index: list_index,
 		is_editing: false,
 		input:      nil,
 		old_text:   "",
-
-		Text:       text,
-		Checked:    checked,
-		Importance: importance,
-		DueDate:    dueDate,
 	}
 }
 

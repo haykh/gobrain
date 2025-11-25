@@ -12,12 +12,9 @@ import (
 )
 
 type List struct {
+	backend.TaskList
 	index int
-
-	Filename string
-	Path     string
-	Title    string
-	Tasks    []task.Task
+	Tasks []task.Task
 }
 
 func (l List) Type() string {
@@ -26,11 +23,8 @@ func (l List) Type() string {
 
 func New(title, filename, path string, index int) List {
 	return List{
-		index: index,
-
-		Filename: filename,
-		Path:     path,
-		Title:    title,
+		TaskList: backend.TaskList{Title: title, Filename: filename, Path: path},
+		index:    index,
 		Tasks:    []task.Task{},
 	}
 }

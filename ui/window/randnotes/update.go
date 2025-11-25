@@ -143,7 +143,7 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 }
 
 func (m *model) Filter() {
-	m.filtered_notes = []*note.Note{}
+	m.filtered_notes = []*backend.Note{}
 	if len(m.notes) == 0 {
 		return
 	}
@@ -180,7 +180,7 @@ func (m *model) Sync() {
 	if err != nil {
 		panic("Could not get daily notes filenames: " + err.Error())
 	}
-	m.notes = []note.Note{}
+	m.notes = []backend.Note{}
 	for fi, filename := range append(filenames_rnd, filenames_dly...) {
 		var path string
 		if fi < len(filenames_rnd) {
