@@ -260,16 +260,16 @@ func (m *model) Filter() {
 }
 
 func (m *model) Sync() {
-	filenames_tasklists, err := m.app.GetMarkdownFilenames(m.app.TasksPath)
+	filenames_tasklists, err := m.app.GetMarkdownFilenames(m.app.Tasks)
 	if err != nil {
 		panic("Could not get tasklist filenames: " + err.Error())
 	}
 	m.tasklists = []list.List{}
 	for fi, filename := range filenames_tasklists {
-		if title, tasks, checked, importances, dueDates, err := backend.ParseMarkdownTasklist(m.app.TasksPath, filename); err != nil {
+		if title, tasks, checked, importances, dueDates, err := backend.ParseMarkdownTasklist(m.app.Tasks, filename); err != nil {
 			panic("Could not parse tasklist: " + err.Error())
 		} else {
-			tl := list.New(title, filename, m.app.TasksPath, fi)
+			tl := list.New(title, filename, m.app.Tasks, fi)
 			for ti := range tasks {
 				tl.AppendTask(task.New(tasks[ti], checked[ti], importances[ti], dueDates[ti], ti, fi))
 			}
