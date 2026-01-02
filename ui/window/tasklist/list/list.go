@@ -37,10 +37,10 @@ func New(title, filename, path string, index int) List {
 	}
 }
 
-func (l *List) StartEditing(input *textinput.Model, placeholder string) {
+func (l *List) StartEditing(input *textinput.Model) {
 	l.input = input
 	l.input.Prompt = ""
-	l.input.Placeholder = placeholder
+	l.input.Placeholder = ""
 	l.input.SetValue(l.Title)
 	l.old_title = l.Title
 	l.is_editing = true
@@ -118,7 +118,7 @@ func (l List) View(width int, hover bool) string {
 		titleText = l.input.View()
 	}
 
-	title := lipgloss.NewStyle().Underline(true).Render(titleText)
+	title := lipgloss.NewStyle().Underline(!l.is_editing).Render(titleText)
 	if hover {
 		title += " <"
 	}

@@ -282,7 +282,7 @@ func (m *model) Filter() {
 
 func (m *model) addTasklist() tea.Cmd {
 	newList := list.New("", "", m.app.Tasks, len(m.tasklists))
-	newList.StartEditing(&m.app.TypingInput, "New tasklist")
+	newList.StartEditing(&m.app.TypingInput)
 
 	m.tasklists = append(m.tasklists, newList)
 	m.is_adding_list = true
