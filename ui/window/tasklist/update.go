@@ -2,6 +2,7 @@ package tasklist
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -18,6 +19,10 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 		case tea.KeyMsg:
 			switch {
 			case key.Matches(msg, ui.Key_Cancel):
+				if m.is_adding_list && m.adding_list_idx >= 0 && m.adding_list_idx < len(m.tasklists) {
+					m.tasklists[m.adding_list_idx].StopEditing(false)
+					m.tasklists = append(m.tasklists[:m.adding_list_idx], m.tasklists[m.adding_list_idx+1:]...)
+				}
 				if m.is_adding_task {
 					m.tasklists[m.adding_list_idx].Tasks[m.adding_task_idx].StopEditing(false)
 					if m.tasklists[m.adding_list_idx].Tasks[m.adding_task_idx].Index() == -1 {
@@ -44,8 +49,21 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 
 			case key.Matches(msg, ui.Key_Accept):
 				if m.is_adding_list {
+					title := strings.TrimSpace(m.app.TypingInput.Value())
+					if _, err := m.app.CreateNew_Tasklist(title); err != nil {
+						return func() tea.Msg {
+							return ui.ErrorMsg{Error: fmt.Errorf("could not create tasklist:\n%v", err)}
+						}
+					}
+
+					if m.adding_list_idx >= 0 && m.adding_list_idx < len(m.tasklists) {
+						m.tasklists[m.adding_list_idx].StopEditing(true)
+					}
+
+					m.app.TypingInput.SetValue("")
 					m.is_adding_list = false
-					// @TODO: add empty tasklist
+					m.adding_list_idx = -1
+					m.Sync()
 				} else if m.is_adding_task {
 					m.is_adding_task = false
 					m.tasklists[m.adding_list_idx].Tasks[m.adding_task_idx].StopEditing(true)
@@ -220,32 +238,18 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 
 			case key.Matches(msg, keys.Add):
 				if m.filtered_tasks[m.cursor.Index].Type() == "tasklist" {
-					m.is_adding_list = true
-					// @TODO: record position to insert new tasklist
-					return func() tea.Msg {
-						return ui.TypingStartMsg{}
-					}
-				} else {
-					if m.cursor.Index == m.task_view_idx_max-1 {
-						m.task_view_idx_min++
-						m.task_view_idx_max++
-					}
-					m.is_adding_task = true
-					m.adding_task_idx = m.filtered_tasks[m.cursor.Index].Index() + 1
-					m.adding_list_idx = m.filtered_tasks[m.cursor.Index].(*task.Task).ListIndex()
-					new_task := task.New("", false, 0, time.Time{}, -1, m.adding_list_idx)
-					new_task.StartEditing(&m.app.TypingInput)
-					m.tasklists[m.adding_list_idx].AddTask(new_task, m.adding_task_idx)
-					m.Filter()
-					return tea.Batch(
-						func() tea.Msg {
-							return ui.TypingStartMsg{}
-						},
-						func() tea.Msg {
-							return ui.DebugMsg{Message: fmt.Sprintf("Adding task to tasklist %d at position %d", m.adding_list_idx, m.adding_task_idx)}
-						},
-					)
+					listIdx := m.filtered_tasks[m.cursor.Index].Index()
+					return m.addTaskToList(listIdx, len(m.tasklists[listIdx].Tasks))
 				}
+
+				if m.cursor.Index == m.task_view_idx_max-1 {
+					m.task_view_idx_min++
+					m.task_view_idx_max++
+				}
+
+				taskIdx := m.filtered_tasks[m.cursor.Index].Index() + 1
+				listIdx := m.filtered_tasks[m.cursor.Index].(*task.Task).ListIndex()
+				return m.addTaskToList(listIdx, taskIdx)
 			}
 		}
 	}
@@ -255,46 +259,116 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 func (m *model) Filter() {
 	m.filtered_tasks = []Selector{}
 	if len(m.tasklists) == 0 {
+		m.cursor.Index = 0
+		m.task_view_idx_min = 0
+		m.task_view_idx_max = 0
 		return
 	}
-	for _, l := range m.tasklists {
-		m.filtered_tasks = append(m.filtered_tasks, &l)
-		for _, t := range l.Tasks {
-			m.filtered_tasks = append(m.filtered_tasks, &t)
+	for i := range m.tasklists {
+		m.filtered_tasks = append(m.filtered_tasks, &m.tasklists[i])
+		for j := range m.tasklists[i].Tasks {
+			m.filtered_tasks = append(m.filtered_tasks, &m.tasklists[i].Tasks[j])
 		}
 	}
 	m.task_view_idx_max = min(m.task_view_idx_min+int(ui.Height_Window), len(m.filtered_tasks))
 	if m.cursor.Index >= len(m.filtered_tasks) {
 		m.cursor.Index = len(m.filtered_tasks) - 1
 	}
+	if m.cursor.Index < 0 {
+		m.cursor.Index = 0
+	}
+	m.ensureCursorVisible()
 }
 
 func (m *model) addTasklist() tea.Cmd {
-	if _, err := m.app.CreateNew_Tasklist(""); err != nil {
-		return func() tea.Msg {
-			return ui.ErrorMsg{Error: fmt.Errorf("could not create tasklist:\n%v", err)}
-		}
+	newList := list.New("", "", m.app.Tasks, len(m.tasklists))
+	newList.StartEditing(&m.app.TypingInput, "New tasklist")
+
+	m.tasklists = append(m.tasklists, newList)
+	m.is_adding_list = true
+	m.adding_list_idx = len(m.tasklists) - 1
+	m.Filter()
+
+	m.cursor.Index = m.indexForList(m.adding_list_idx)
+	m.ensureCursorVisible()
+
+	return tea.Batch(
+		func() tea.Msg {
+			return ui.TypingStartMsg{}
+		},
+		func() tea.Msg {
+			return ui.DebugMsg{Message: "Adding new tasklist"}
+		},
+	)
+}
+
+func (m *model) addTaskToList(listIdx, insertAt int) tea.Cmd {
+	if listIdx < 0 || listIdx >= len(m.tasklists) {
+		return nil
 	}
 
-	m.Sync()
-	if len(m.filtered_tasks) > 0 {
-		m.cursor.Index = 0
-		if m.filtered_tasks[len(m.filtered_tasks)-1].Type() == "task" {
-			// move cursor to last tasklist entry
-			for i := len(m.filtered_tasks) - 1; i >= 0; i-- {
-				if m.filtered_tasks[i].Type() == "tasklist" {
-					m.cursor.Index = i
-					break
+	insertAt = max(0, min(insertAt, len(m.tasklists[listIdx].Tasks)))
+
+	m.is_adding_task = true
+	m.adding_task_idx = insertAt
+	m.adding_list_idx = listIdx
+
+	newTask := task.New("", false, 0, time.Time{}, -1, m.adding_list_idx)
+	newTask.StartEditing(&m.app.TypingInput)
+	m.tasklists[m.adding_list_idx].AddTask(newTask, m.adding_task_idx)
+	m.Filter()
+
+	m.cursor.Index = m.indexForTask(m.adding_list_idx, m.adding_task_idx)
+	m.ensureCursorVisible()
+
+	return tea.Batch(
+		func() tea.Msg {
+			return ui.TypingStartMsg{}
+		},
+		func() tea.Msg {
+			return ui.DebugMsg{Message: fmt.Sprintf("Adding task to tasklist %d at position %d", m.adding_list_idx, m.adding_task_idx)}
+		},
+	)
+}
+
+func (m *model) indexForList(listIdx int) int {
+	for i, item := range m.filtered_tasks {
+		if item.Type() == "tasklist" && item.Index() == listIdx {
+			return i
+		}
+	}
+	return 0
+}
+
+func (m *model) indexForTask(listIdx, taskIdx int) int {
+	for i, item := range m.filtered_tasks {
+		if item.Type() == "task" {
+			if t, ok := item.(*task.Task); ok {
+				if t.ListIndex() == listIdx && t.Index() == taskIdx {
+					return i
 				}
 			}
-		} else {
-			m.cursor.Index = len(m.filtered_tasks) - 1
 		}
 	}
+	return 0
+}
 
-	return func() tea.Msg {
-		return ui.DebugMsg{Message: "Added new tasklist"}
+func (m *model) ensureCursorVisible() {
+	if len(m.filtered_tasks) == 0 {
+		m.task_view_idx_min = 0
+		m.task_view_idx_max = 0
+		return
 	}
+
+	if m.cursor.Index < m.task_view_idx_min {
+		m.task_view_idx_min = m.cursor.Index
+	}
+	if m.cursor.Index >= m.task_view_idx_max {
+		m.task_view_idx_max = m.cursor.Index + 1
+	}
+
+	m.task_view_idx_min = max(0, min(m.task_view_idx_min, len(m.filtered_tasks)-1))
+	m.task_view_idx_max = min(max(m.task_view_idx_min+1, m.task_view_idx_max), len(m.filtered_tasks))
 }
 
 func (m *model) Sync() {
