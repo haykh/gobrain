@@ -73,6 +73,13 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 		}
 	} else {
 		if len(m.filtered_tasks) == 0 {
+			switch msg := msg.(type) {
+			case tea.KeyMsg:
+				switch {
+				case key.Matches(msg, keys.AddList):
+					return m.addTasklist()
+				}
+			}
 			return nil
 		}
 		adjust_minmax_idx := func() {
@@ -154,6 +161,9 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 					}
 				}
 				return nil
+
+			case key.Matches(msg, keys.AddList):
+				return m.addTasklist()
 
 			case key.Matches(msg, keys.Edit):
 				if m.filtered_tasks[m.cursor.Index].Type() == "task" {
@@ -256,6 +266,34 @@ func (m *model) Filter() {
 	m.task_view_idx_max = min(m.task_view_idx_min+int(ui.Height_Window), len(m.filtered_tasks))
 	if m.cursor.Index >= len(m.filtered_tasks) {
 		m.cursor.Index = len(m.filtered_tasks) - 1
+	}
+}
+
+func (m *model) addTasklist() tea.Cmd {
+	if _, err := m.app.CreateNew_Tasklist(""); err != nil {
+		return func() tea.Msg {
+			return ui.ErrorMsg{Error: fmt.Errorf("could not create tasklist:\n%v", err)}
+		}
+	}
+
+	m.Sync()
+	if len(m.filtered_tasks) > 0 {
+		m.cursor.Index = 0
+		if m.filtered_tasks[len(m.filtered_tasks)-1].Type() == "task" {
+			// move cursor to last tasklist entry
+			for i := len(m.filtered_tasks) - 1; i >= 0; i-- {
+				if m.filtered_tasks[i].Type() == "tasklist" {
+					m.cursor.Index = i
+					break
+				}
+			}
+		} else {
+			m.cursor.Index = len(m.filtered_tasks) - 1
+		}
+	}
+
+	return func() tea.Msg {
+		return ui.DebugMsg{Message: "Added new tasklist"}
 	}
 }
 

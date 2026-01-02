@@ -117,6 +117,33 @@ func (b Backend) CreateNew_RandomNote() (string, error) {
 	return filename, nil
 }
 
+func (b Backend) CreateNew_Tasklist(title string) (string, error) {
+	if title == "" {
+		title = "New Tasklist"
+	}
+
+	prefix := time.Now().Format("2006-Jan-02-tasklist")
+
+	var filename string
+	var filenameFull string
+	for i := 1; i < 100; i++ {
+		filename = fmt.Sprintf("%s-%02d.md", prefix, i)
+		filenameFull = filepath.Join(b.Tasks, filename)
+		if !b.storage.Exists(filenameFull) {
+			break
+		}
+		if i == 99 {
+			return "", fmt.Errorf("could not create new tasklist, too many files for today")
+		}
+	}
+
+	if err := WriteMarkdownTasklist(b.Tasks, filename, title, []string{}, []bool{}, []int{}, []time.Time{}); err != nil {
+		return "", fmt.Errorf("could not write new tasklist: %v", err)
+	}
+
+	return filename, nil
+}
+
 func (b Backend) TrashNote(filename, path string) error {
 	filename_full := filepath.Join(path, filename)
 	if !b.storage.Exists(filename_full) {

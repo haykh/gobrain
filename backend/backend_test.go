@@ -70,6 +70,27 @@ func TestCreateRandomNoteGeneratesUniqueNames(t *testing.T) {
 	}
 }
 
+func TestCreateTasklistCreatesFile(t *testing.T) {
+	root := t.TempDir()
+	b := New(root)
+	b.Init()
+
+	filename, err := b.CreateNew_Tasklist("Inbox")
+	if err != nil {
+		t.Fatalf("CreateNew_Tasklist returned error: %v", err)
+	}
+
+	content, err := os.ReadFile(filepath.Join(b.Tasks, filename))
+	if err != nil {
+		t.Fatalf("reading created tasklist failed: %v", err)
+	}
+
+	text := string(content)
+	if !strings.Contains(text, "# Inbox") {
+		t.Fatalf("expected title header in tasklist, got: %s", text)
+	}
+}
+
 func TestTrashNoteMovesToTypedTrash(t *testing.T) {
 	root := t.TempDir()
 	b := New(root)
