@@ -7,6 +7,9 @@ import (
 )
 
 func (m model) View() string {
+	if len(m.filtered_tasks) == 0 {
+		return ""
+	}
 	l_views := []string{}
 	for i := m.task_view_idx_min; i < m.task_view_idx_max; i++ {
 		l_views = append(

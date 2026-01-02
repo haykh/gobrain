@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -278,7 +279,15 @@ func AddMetadataMarkdownNote(path, name, metadata string, value any) error {
 
 	var newMetadataBlock strings.Builder
 	newMetadataBlock.WriteString("+++\n")
-	for key, val := range metadataMap {
+
+	keys := make([]string, 0, len(metadataMap))
+	for key := range metadataMap {
+		keys = append(keys, key)
+	}
+	slices.Sort(keys)
+
+	for _, key := range keys {
+		val := metadataMap[key]
 		newMetadataBlock.WriteString(fmt.Sprintf("%s = %s\n", key, val))
 	}
 	newMetadataBlock.WriteString("+++\n\n")

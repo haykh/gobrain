@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/haykh/gobrain/backend"
 	"github.com/haykh/gobrain/ui"
@@ -12,12 +13,13 @@ import (
 )
 
 type List struct {
+	backend.TaskList
 	index int
+	Tasks []task.Task
 
-	Filename string
-	Path     string
-	Title    string
-	Tasks    []task.Task
+	is_editing bool
+	input      *textinput.Model
+	old_title  string
 }
 
 func (l List) Type() string {
@@ -26,13 +28,38 @@ func (l List) Type() string {
 
 func New(title, filename, path string, index int) List {
 	return List{
-		index: index,
-
-		Filename: filename,
-		Path:     path,
-		Title:    title,
-		Tasks:    []task.Task{},
+		TaskList:   backend.TaskList{Title: title, Filename: filename, Path: path},
+		index:      index,
+		Tasks:      []task.Task{},
+		is_editing: false,
+		input:      nil,
+		old_title:  "",
 	}
+}
+
+func (l *List) StartEditing(input *textinput.Model) {
+	l.input = input
+	l.input.Prompt = ""
+	l.input.Placeholder = ""
+	l.input.SetValue(l.Title)
+	l.old_title = l.Title
+	l.is_editing = true
+}
+
+func (l *List) StopEditing(accept bool) {
+	if l.input == nil {
+		return
+	}
+
+	if accept {
+		l.Title = l.input.Value()
+	} else {
+		l.Title = l.old_title
+	}
+
+	l.input.SetValue("")
+	l.input = nil
+	l.is_editing = false
 }
 
 func (l *List) AppendTask(t task.Task) {
@@ -86,7 +113,12 @@ func (l List) NumTasks() int {
 }
 
 func (l List) View(width int, hover bool) string {
-	title := lipgloss.NewStyle().Underline(true).Render(l.Title)
+	titleText := l.Title
+	if l.is_editing && l.input != nil {
+		titleText = l.input.View()
+	}
+
+	title := lipgloss.NewStyle().Underline(!l.is_editing).Render(titleText)
 	if hover {
 		title += " <"
 	}

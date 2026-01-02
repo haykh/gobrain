@@ -93,6 +93,10 @@ var Key_Add = key.NewBinding(
 	key.WithKeys("a"),
 	key.WithHelp("a", "add/create"),
 )
+var Key_AddList = key.NewBinding(
+	key.WithKeys("shift+a", "A"),
+	key.WithHelp("A", "add tasklist"),
+)
 var Key_Edit = key.NewBinding(
 	key.WithKeys("e"),
 	key.WithHelp("e", "edit"),

@@ -129,7 +129,7 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 		case key.Matches(msg, keys.Add):
 			if newfile, err := m.app.CreateNew_RandomNote(); err == nil {
 				return func() tea.Msg {
-					return ui.OpenEditorMsg{Filename: filepath.Join(m.app.RandomNotesPath, newfile)}
+					return ui.OpenEditorMsg{Filename: filepath.Join(m.app.RandomNotes, newfile)}
 				}
 			} else {
 				return func() tea.Msg {
@@ -143,7 +143,7 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 }
 
 func (m *model) Filter() {
-	m.filtered_notes = []*note.Note{}
+	m.filtered_notes = []*backend.Note{}
 	if len(m.notes) == 0 {
 		return
 	}
@@ -172,21 +172,21 @@ func (m *model) Filter() {
 }
 
 func (m *model) Sync() {
-	filenames_rnd, err := m.app.GetMarkdownFilenames(m.app.RandomNotesPath)
+	filenames_rnd, err := m.app.GetMarkdownFilenames(m.app.RandomNotes)
 	if err != nil {
 		panic("Could not get random notes filenames: " + err.Error())
 	}
-	filenames_dly, err := m.app.GetMarkdownFilenames(m.app.DailyNotesPath)
+	filenames_dly, err := m.app.GetMarkdownFilenames(m.app.DailyNotes)
 	if err != nil {
 		panic("Could not get daily notes filenames: " + err.Error())
 	}
-	m.notes = []note.Note{}
+	m.notes = []backend.Note{}
 	for fi, filename := range append(filenames_rnd, filenames_dly...) {
 		var path string
 		if fi < len(filenames_rnd) {
-			path = m.app.RandomNotesPath
+			path = m.app.RandomNotes
 		} else {
-			path = m.app.DailyNotesPath
+			path = m.app.DailyNotes
 		}
 		if title, icon, tags, created, err := backend.ParseMarkdownNote(path, filename); err != nil {
 			panic("Could not parse random note: " + err.Error())
