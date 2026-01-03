@@ -113,9 +113,9 @@ func (l List) View(width int, hover bool) string {
 		titleText = l.input.View()
 	}
 
-	title := lipgloss.NewStyle().Underline(!l.is_editing).Render(titleText)
-	if hover {
-		title += " <"
+	title := titleText
+	if hover && !l.is_editing {
+		title = lipgloss.NewStyle().Underline(true).Render(title)
 	}
 	spacer := " "
 	space := lipgloss.NewStyle().

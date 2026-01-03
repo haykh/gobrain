@@ -10,9 +10,6 @@ type NewList struct {
 	err       error
 }
 
-//	func (m NewList) Init() tea.Cmd {
-//		return textinput.Blink
-//	}
 func (m *NewList) Update(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
 

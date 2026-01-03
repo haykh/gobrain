@@ -63,7 +63,11 @@ func (t *Task) StopEditing(accept bool) {
 }
 
 func (t Task) View(width int, hover bool) string {
-	line := lipgloss.NewStyle().Foreground(ui.Color_Fg_Braces).Render(" [")
+	line := " "
+	if hover && !t.is_editing {
+		line = ">"
+	}
+	line += lipgloss.NewStyle().Foreground(ui.Color_Fg_Braces).Render("[")
 	textstyle := lipgloss.NewStyle()
 	if t.Checked {
 		line += lipgloss.NewStyle().Foreground(ui.Color_Fg_Checkmark).Render("✓")
@@ -75,7 +79,7 @@ func (t Task) View(width int, hover bool) string {
 	if t.is_editing && t.input != nil {
 		text = t.input.View()
 	}
-	if !t.DueDate.IsZero() {
+	if !t.DueDate.IsZero() && !t.is_editing {
 		if time.Now().After(t.DueDate) && !t.Checked {
 			text += " {overdue}"
 		} else if time.Now().Add(30 * 24 * time.Hour).After(t.DueDate) {
@@ -85,7 +89,7 @@ func (t Task) View(width int, hover bool) string {
 		}
 	}
 	line += lipgloss.NewStyle().Foreground(ui.Color_Fg_Braces).Render("] ")
-	if t.Importance > 0 {
+	if t.Importance > 0 && !t.is_editing {
 		switch t.Importance {
 		case 1:
 			line += lipgloss.NewStyle().Foreground(ui.Color_Fg_Task_PriorityLow).Render(textstyle.Render(text))
@@ -96,9 +100,6 @@ func (t Task) View(width int, hover bool) string {
 		}
 	} else {
 		line += textstyle.Render(text)
-	}
-	if hover && !t.is_editing {
-		line += " <"
 	}
 	spacer := " "
 	space := lipgloss.NewStyle().
