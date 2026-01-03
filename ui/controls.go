@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"time"
+
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
@@ -69,6 +71,12 @@ type TrashNoteMsg struct {
 
 type TypingStartMsg struct{}
 type TypingEndMsg struct{}
+
+type WeatherMsg struct {
+	Body      string
+	FetchedAt time.Time
+	Error     error
+}
 
 // Key bindings
 var Key_Up = key.NewBinding(

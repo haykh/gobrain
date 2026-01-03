@@ -1,6 +1,7 @@
 package window
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/charmbracelet/bubbles/help"
@@ -22,6 +23,8 @@ type Window struct {
 
 	weather              string
 	weather_last_updated time.Time
+	weather_fetching     bool
+	httpClient           *http.Client
 
 	typing_input textinput.Model
 	is_typing    bool
@@ -56,8 +59,10 @@ func New(app *backend.Backend, show_help bool, debug bool) Window {
 		debug_logs:     []string{},
 		max_debug_logs: 20,
 
-		weather:              "",
+		weather:              "fetching weather...",
 		weather_last_updated: time.Time{},
+		weather_fetching:     true,
+		httpClient:           &http.Client{Timeout: 30 * time.Second},
 
 		is_typing: false,
 
@@ -73,11 +78,13 @@ func New(app *backend.Backend, show_help bool, debug bool) Window {
 
 		app: app,
 	}
-	window.FetchWeather()
 	return window
 }
 
 func (w Window) Init() tea.Cmd {
+	if w.weather_fetching {
+		return fetchWeatherCmd(w.httpClient)
+	}
 	return textinput.Blink
 }
 

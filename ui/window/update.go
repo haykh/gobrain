@@ -10,33 +10,38 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
+
 	"github.com/haykh/gobrain/backend"
 	"github.com/haykh/gobrain/ui"
 )
 
-func (w *Window) FetchWeather() {
-	if resp, err := http.Get(fmt.Sprintf("https://wttr.in/?m&format=%s", ui.Fmt_Weather)); err == nil {
-		w.DebugLog("Fetching weather data")
-		defer resp.Body.Close()
-
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			panic(err)
+func fetchWeatherCmd(client *http.Client) tea.Cmd {
+	return func() tea.Msg {
+		if client == nil {
+			client = &http.Client{Timeout: 30 * time.Second}
 		}
 
-		w.weather_last_updated = time.Now()
-		w.weather = string(body)
+		url := fmt.Sprintf("https://wttr.in/?m&format=%s", ui.Fmt_Weather)
+		resp, err := client.Get(url)
+		if err != nil {
+			return ui.WeatherMsg{Error: err}
+		}
+		defer resp.Body.Close()
+
+		b, err := io.ReadAll(io.LimitReader(resp.Body, 64*1024))
+		if err != nil {
+			return ui.WeatherMsg{Error: err}
+		}
+
+		return ui.WeatherMsg{
+			Body:      string(b),
+			FetchedAt: time.Now(),
+		}
 	}
-	// w.weather_last_updated = time.Now()
-	// w.weather = "hello"
 }
 
 func (w Window) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
-
-	if w.weather == "" || time.Since(w.weather_last_updated) > ui.UpdateInterval_Weather {
-		w.FetchWeather()
-	}
 
 	if !w.mdviewport_show {
 		active_panel_msg := w.panels[w.active_panel].Update(msg)
@@ -49,17 +54,20 @@ func (w Window) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmd = tea.Batch(cmd, cmd_typing)
 
 		switch msg.(type) {
+
 		case ui.TypingEndMsg:
 			w.is_typing = false
 			w.app.TypingInput.Blur()
 			return w, func() tea.Msg {
 				return ui.DebugMsg{Message: "Ended typing"}
 			}
+
 		}
 
 	} else {
 
 		switch msg := msg.(type) {
+
 		case ui.TypingStartMsg:
 			w.is_typing = true
 			w.app.TypingInput.Focus()
@@ -142,7 +150,9 @@ func (w Window) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return w, nil
 
 		case tea.KeyMsg:
+
 			switch {
+
 			case key.Matches(msg, ui.Key_Back):
 				if w.mdviewport_show {
 					w.mdviewport_show = false
@@ -172,11 +182,13 @@ func (w Window) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					w.mdviewport, cmd_md = w.mdviewport.Update(msg)
 					return w, tea.Batch(cmd, cmd_md)
 				}
+
 			}
 		}
 	}
 
 	switch msg := msg.(type) {
+
 	case ui.ErrorMsg:
 		if msg.Error != nil {
 			w.DebugLog(fmt.Sprintf("Error: %v", msg.Error))
@@ -185,9 +197,25 @@ func (w Window) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return w, nil
 		}
 
+	case ui.WeatherMsg:
+		w.weather_fetching = false
+		if msg.Error != nil {
+			w.DebugLog("weather fetch error: " + msg.Error.Error())
+			return w, nil
+		}
+		w.weather = msg.Body
+		w.weather_last_updated = msg.FetchedAt
+		return w, nil
+
 	case ui.DebugMsg:
 		w.DebugLog(msg.Message)
 		return w, nil
+
+	}
+
+	if !w.weather_fetching && (w.weather == "fetching weather..." || time.Since(w.weather_last_updated) > ui.UpdateInterval_Weather) {
+		w.weather_fetching = true
+		return w, fetchWeatherCmd(w.httpClient)
 	}
 
 	return w, cmd
