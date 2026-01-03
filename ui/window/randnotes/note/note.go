@@ -7,6 +7,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/dustin/go-humanize"
+
 	"github.com/haykh/gobrain/backend"
 	"github.com/haykh/gobrain/ui"
 )

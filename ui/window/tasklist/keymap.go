@@ -2,6 +2,7 @@ package tasklist
 
 import (
 	"github.com/charmbracelet/bubbles/key"
+
 	"github.com/haykh/gobrain/ui"
 )
 

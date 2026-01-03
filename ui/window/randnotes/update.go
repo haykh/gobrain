@@ -5,6 +5,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/haykh/gobrain/backend"
 	"github.com/haykh/gobrain/ui"
 	"github.com/haykh/gobrain/ui/window/randnotes/note"

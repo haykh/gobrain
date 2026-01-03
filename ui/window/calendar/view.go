@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
+
 	"github.com/haykh/gobrain/ui"
 )
 

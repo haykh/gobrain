@@ -2,6 +2,7 @@ package randnotes
 
 import (
 	"github.com/charmbracelet/bubbles/help"
+
 	"github.com/haykh/gobrain/backend"
 	"github.com/haykh/gobrain/ui"
 )

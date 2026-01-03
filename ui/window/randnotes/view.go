@@ -2,6 +2,7 @@ package randnotes
 
 import (
 	"github.com/charmbracelet/lipgloss"
+
 	"github.com/haykh/gobrain/components"
 	"github.com/haykh/gobrain/ui"
 	"github.com/haykh/gobrain/ui/window/randnotes/note"

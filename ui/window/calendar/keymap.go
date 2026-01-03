@@ -2,6 +2,7 @@ package calendar
 
 import (
 	"github.com/charmbracelet/bubbles/key"
+
 	"github.com/haykh/gobrain/ui"
 )
 
