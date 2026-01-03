@@ -1,6 +1,8 @@
 package dashboard
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/haykh/gobrain/ui"
@@ -63,12 +65,45 @@ func (m model) View() string {
 		)
 	}
 
+	renderUrgentTasks := func() string {
+		if len(m.urgentTasks) == 0 {
+			return place_small_button(small_button_style.Render("no urgent tasks"))
+		}
+
+		taskLines := []string{}
+		for i, task := range m.urgentTasks {
+			line := fmt.Sprintf("%d. %s", i+1, task.Text)
+			if !task.DueDate.IsZero() {
+				line = fmt.Sprintf("%s — %s", line, task.DueDate.Format("Jan 02"))
+			} else {
+				line = fmt.Sprintf("%s — due soon", line)
+			}
+			taskLines = append(taskLines, line)
+		}
+
+		urgentList := small_button_style.
+			Align(lipgloss.Left).
+			Render(lipgloss.JoinVertical(lipgloss.Left, taskLines...))
+
+		height := ui.MarginT_SmallBtn + lipgloss.Height(urgentList)
+		if height < ui.MarginT_SmallBtn+1 {
+			height = ui.MarginT_SmallBtn + 1
+		}
+		return lipgloss.Place(
+			column_width, height,
+			lipgloss.Center, lipgloss.Bottom,
+			urgentList,
+			lipgloss.WithWhitespaceChars(ui.String_Bg),
+			lipgloss.WithWhitespaceForeground(ui.Color_Bg),
+		)
+	}
+
 	dly_button := place_large_button(dly_style.Render(ui.Title("daily")))
 	tsk_button := place_large_button(tsk_style.Render(ui.Title("tasks")))
 	rnd_buttom := place_large_button(rnd_style.Render(ui.Title("random")))
 
 	todaysnote_button := place_small_button(todaysnote_style.Render("today"))
-	dummy := place_small_button("")
+	urgent_tasks := renderUrgentTasks()
 	newnote_button := place_small_button(newnote_style.Render("new"))
 
 	dly_column := lipgloss.JoinVertical(
@@ -80,7 +115,7 @@ func (m model) View() string {
 	tsk_column := lipgloss.JoinVertical(
 		lipgloss.Center,
 		tsk_button,
-		dummy,
+		urgent_tasks,
 	)
 
 	rnd_column := lipgloss.JoinVertical(

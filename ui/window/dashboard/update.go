@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/haykh/gobrain/backend"
 	"github.com/haykh/gobrain/ui"
 )
 
@@ -165,5 +166,29 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 }
 
 func (m *model) Sync() error {
+	filenamesTasklists, err := m.app.GetMarkdownFilenames(m.app.Tasks)
+	if err != nil {
+		return err
+	}
+
+	tasklists := []backend.TaskList{}
+	for _, filename := range filenamesTasklists {
+		if title, tasks, checked, importances, dueDates, err := backend.ParseMarkdownTasklist(m.app.Tasks, filename); err != nil {
+			return err
+		} else {
+			tasklist := backend.TaskList{Title: title, Filename: filename, Path: m.app.Tasks}
+			for i := range tasks {
+				tasklist.Items = append(tasklist.Items, backend.TaskItem{
+					Text:       tasks[i],
+					Checked:    checked[i],
+					Importance: importances[i],
+					DueDate:    dueDates[i],
+				})
+			}
+			tasklists = append(tasklists, tasklist)
+		}
+	}
+
+	m.urgentTasks = backend.GetUrgentTasks(tasklists, 5)
 	return nil
 }

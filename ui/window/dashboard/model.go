@@ -22,14 +22,18 @@ type model struct {
 	keymap help.KeyMap
 
 	app *backend.Backend
+
+	urgentTasks []backend.TaskItem
 }
 
 func New(app *backend.Backend) model {
-	return model{
+	m := model{
 		cursor: DailyNotes,
 		keymap: keys,
 		app:    app,
 	}
+	m.Sync()
+	return m
 }
 
 func (m model) Path() []string {
