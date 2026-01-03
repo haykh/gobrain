@@ -7,6 +7,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
+
 	"github.com/haykh/gobrain/backend"
 	"github.com/haykh/gobrain/ui"
 	"github.com/haykh/gobrain/ui/window/tasklist/task"
