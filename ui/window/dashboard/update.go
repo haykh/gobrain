@@ -189,6 +189,6 @@ func (m *model) Sync() error {
 		}
 	}
 
-	m.urgentTasks = backend.GetUrgentTasks(tasklists, 5)
+	m.urgentTasks = backend.GetUrgentTasks(tasklists, 8)
 	return nil
 }
