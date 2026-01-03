@@ -14,7 +14,6 @@ import (
 
 type List struct {
 	backend.TaskList
-	index int
 	Tasks []task.Task
 
 	is_editing bool
@@ -22,14 +21,9 @@ type List struct {
 	old_title  string
 }
 
-func (l List) Type() string {
-	return "tasklist"
-}
-
-func New(title, filename, path string, index int) List {
+func New(title, filename, path string) List {
 	return List{
 		TaskList:   backend.TaskList{Title: title, Filename: filename, Path: path},
-		index:      index,
 		Tasks:      []task.Task{},
 		is_editing: false,
 		input:      nil,
@@ -89,7 +83,7 @@ func (l *List) AddRawTask(text string, i int) {
 	} else {
 		taskText = text
 	}
-	newtask := task.New(taskText, false, importance, dueTime, i, l.index)
+	newtask := task.New(taskText, false, importance, dueTime)
 	l.Tasks = append(l.Tasks[:i], append([]task.Task{newtask}, l.Tasks[i:]...)...)
 }
 
@@ -151,8 +145,4 @@ func (l List) Sync() error {
 		}
 	}
 	return backend.WriteMarkdownTasklist(l.Path, l.Filename, l.Title, tasks, checked, importances, dueDates)
-}
-
-func (l List) Index() int {
-	return l.index
 }

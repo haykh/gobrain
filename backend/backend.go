@@ -2,7 +2,6 @@ package backend
 
 import (
 	"fmt"
-	"os/user"
 	"path/filepath"
 	"strings"
 	"time"
@@ -17,21 +16,9 @@ type Backend struct {
 	TypingInput textinput.Model
 }
 
-func New(path ...string) *Backend {
-	root := ""
-	if len(path) > 0 {
-		root = filepath.Join(path...)
-	} else {
-		usr, err := user.Current()
-		if err != nil {
-			panic("Could not get current user: " + err.Error())
-		}
-		root = filepath.Join(usr.HomeDir, ".gobrain")
-	}
-
-	paths := NewPaths(root)
+func New(root string) *Backend {
 	return &Backend{
-		Paths:       paths,
+		Paths:       NewPaths(root),
 		storage:     localStorage{},
 		TypingInput: textinput.New(),
 	}
@@ -81,7 +68,7 @@ func (b Backend) CreateNew_DailyNote(date time.Time) (string, error) {
 
 func (b Backend) CreateNew_RandomNote() (string, error) {
 	now := time.Now()
-	datePrefix := now.Format("2006-Jan-02")
+	datePrefix := now.Format("2006_Jan_02_15_04_05")
 
 	var filename string
 	var filename_full string
@@ -122,7 +109,7 @@ func (b Backend) CreateNew_Tasklist(title string) (string, error) {
 		title = "New Tasklist"
 	}
 
-	prefix := time.Now().Format("2006-Jan-02-tasklist")
+	prefix := time.Now().Format("2006_Jan_02_15_04_05_tasklist")
 
 	var filename string
 	var filenameFull string

@@ -171,14 +171,14 @@ func (m *model) Filter() {
 	}
 }
 
-func (m *model) Sync() {
+func (m *model) Sync() error {
 	filenames_rnd, err := m.app.GetMarkdownFilenames(m.app.RandomNotes)
 	if err != nil {
-		panic("Could not get random notes filenames: " + err.Error())
+		return err
 	}
 	filenames_dly, err := m.app.GetMarkdownFilenames(m.app.DailyNotes)
 	if err != nil {
-		panic("Could not get daily notes filenames: " + err.Error())
+		return err
 	}
 	m.notes = []backend.Note{}
 	for fi, filename := range append(filenames_rnd, filenames_dly...) {
@@ -196,4 +196,5 @@ func (m *model) Sync() {
 		}
 	}
 	m.Filter()
+	return nil
 }

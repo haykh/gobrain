@@ -54,7 +54,7 @@ func New(app *backend.Backend, show_help bool, debug bool) Window {
 	window := Window{
 		debug:          debug,
 		debug_logs:     []string{},
-		max_debug_logs: 30,
+		max_debug_logs: 20,
 
 		weather:              "",
 		weather_last_updated: time.Time{},

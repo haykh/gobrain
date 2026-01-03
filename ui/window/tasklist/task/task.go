@@ -12,8 +12,6 @@ import (
 
 type Task struct {
 	backend.TaskItem
-	index      int
-	list_index int
 	is_editing bool
 	input      *textinput.Model
 	old_text   string
@@ -23,7 +21,7 @@ func (t Task) Type() string {
 	return "task"
 }
 
-func New(text string, checked bool, importance int, dueDate time.Time, index, list_index int) Task {
+func New(text string, checked bool, importance int, dueDate time.Time) Task {
 	return Task{
 		TaskItem: backend.TaskItem{
 			Text:       text,
@@ -31,8 +29,6 @@ func New(text string, checked bool, importance int, dueDate time.Time, index, li
 			Importance: importance,
 			DueDate:    dueDate,
 		},
-		index:      index,
-		list_index: list_index,
 		is_editing: false,
 		input:      nil,
 		old_text:   "",
@@ -90,12 +86,4 @@ func (t Task) View(width int, hover bool) string {
 		line,
 		space,
 	)
-}
-
-func (t Task) Index() int {
-	return t.index
-}
-
-func (t Task) ListIndex() int {
-	return t.list_index
 }

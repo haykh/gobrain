@@ -13,6 +13,8 @@ const (
 	DirDown
 	DirLeft
 	DirRight
+	DirPgUp
+	DirPgDown
 )
 
 type PanelType int
@@ -30,7 +32,7 @@ type PanelView interface {
 	Parent() PanelType
 
 	View() string
-	Sync()
+	Sync() error
 	Update(msg tea.Msg) tea.Cmd
 
 	Keys() help.KeyMap

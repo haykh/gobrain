@@ -163,4 +163,6 @@ func (m *model) Update(msg tea.Msg) tea.Cmd {
 	return nil
 }
 
-func (m *model) Sync() {}
+func (m *model) Sync() error {
+	return nil
+}

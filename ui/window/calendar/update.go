@@ -27,11 +27,11 @@ func (m *model) ResetCursor() {
 	}
 }
 
-func (m *model) Sync() {
+func (m *model) Sync() error {
 	m.calendar_days = []CalendarDay{}
 	filenames, err := m.app.GetMarkdownFilenames(m.app.DailyNotes)
 	if err != nil {
-		panic("Could not get markdown filenames: " + err.Error())
+		return err
 	}
 	for d := m.shown_date_min; d.Before(m.shown_date_max); d = d.AddDate(0, 0, 1) {
 		note_exists := false
@@ -45,6 +45,7 @@ func (m *model) Sync() {
 			NoteExists: note_exists,
 		})
 	}
+	return nil
 }
 
 func (m *model) Update(msg tea.Msg) tea.Cmd {

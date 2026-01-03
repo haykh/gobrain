@@ -68,7 +68,11 @@ func (w Window) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case ui.NavigateFwdMsg:
 			if msg.NewPanel != w.active_panel {
 				w.active_panel = msg.NewPanel
-				w.panels[w.active_panel].Sync()
+				if err := w.panels[w.active_panel].Sync(); err != nil {
+					return nil, func() tea.Msg {
+						return ui.ErrorMsg{Error: err}
+					}
+				}
 			}
 			w.DebugLog(fmt.Sprintf("Navigating to panel: %s", w.panels[w.active_panel].Path()))
 			return w, nil
@@ -81,7 +85,11 @@ func (w Window) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				w.DebugLog(fmt.Sprintf("Error opening editor: %v", msg.Error))
 				return w, tea.Quit
 			}
-			w.panels[w.active_panel].Sync()
+			if err := w.panels[w.active_panel].Sync(); err != nil {
+				return nil, func() tea.Msg {
+					return ui.ErrorMsg{Error: err}
+				}
+			}
 			return w, nil
 
 		case ui.NewViewer:
@@ -124,7 +132,11 @@ func (w Window) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				w.DebugLog(fmt.Sprintf("Error trashing random note: %v", err))
 				return w, tea.Quit
 			}
-			w.panels[w.active_panel].Sync()
+			if err := w.panels[w.active_panel].Sync(); err != nil {
+				return nil, func() tea.Msg {
+					return ui.ErrorMsg{Error: err}
+				}
+			}
 			return w, nil
 
 		case tea.KeyMsg:
@@ -137,7 +149,11 @@ func (w Window) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					new_panel := w.panels[w.active_panel].Parent()
 					if new_panel != w.active_panel {
 						w.active_panel = new_panel
-						w.panels[w.active_panel].Sync()
+						if err := w.panels[w.active_panel].Sync(); err != nil {
+							return nil, func() tea.Msg {
+								return ui.ErrorMsg{Error: err}
+							}
+						}
 					}
 				}
 				return w, nil

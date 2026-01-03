@@ -7,30 +7,46 @@ import (
 )
 
 func (m model) View() string {
-	if len(m.filtered_tasks) == 0 {
-		return ""
-	}
-	l_views := []string{}
-	for i := m.task_view_idx_min; i < m.task_view_idx_max; i++ {
-		l_views = append(
-			l_views,
-			m.filtered_tasks[i].View(
-				ui.Width_Window-1,
-				(m.cursor.Index == i) && !m.is_adding_task && !m.is_adding_list,
-			),
-		)
+	lines := []string{}
+	counter := 0
+	counter_visible := 0
+	for tl_idx, tl := range m.tasklists {
+		if m.view_range.IsVisible(counter) {
+			lines = append(
+				lines,
+				tl.View(
+					ui.Width_Window-1,
+					m.cursor.TaskIndex == 0 && m.cursor.TasklistIndex == tl_idx,
+				),
+			)
+			counter_visible++
+		}
+		counter++
+		for t_idx, t := range tl.Tasks {
+			if m.view_range.IsVisible(counter) {
+				lines = append(
+					lines,
+					t.View(
+						ui.Width_Window-1,
+						m.cursor.TaskIndex == t_idx+1 && m.cursor.TasklistIndex == tl_idx,
+					),
+				)
+				counter_visible++
+			}
+			counter++
+		}
 	}
 	return lipgloss.JoinHorizontal(
 		lipgloss.Top,
 		lipgloss.JoinVertical(
 			lipgloss.Left,
-			l_views...,
+			lines...,
 		),
 		components.Scrollbar(
 			ui.Height_Window,
-			len(m.filtered_tasks),
-			m.task_view_idx_min,
-			m.task_view_idx_max-m.task_view_idx_min,
+			counter,
+			m.view_range.IMin,
+			counter_visible,
 		),
 	)
 }
