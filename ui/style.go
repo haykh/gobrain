@@ -12,10 +12,17 @@ const (
 	**/
 	//// Colors
 	// general colors
-	Color_Border_Window = lipgloss.Color("236")
-	Color_InactiveBg    = lipgloss.Color("236")
-	Color_ActiveBg      = lipgloss.Color("57")
-	Color_Dividers      = lipgloss.Color("245")
+	Color_Border_Window             = lipgloss.Color("236")
+	Color_InactiveBg                = lipgloss.Color("236")
+	Color_ActiveBg                  = lipgloss.Color("57")
+	Color_Dividers                  = lipgloss.Color("245")
+	Color_Fg_Task_PriorityHigh      = lipgloss.Color("1")
+	Color_Fg_Task_PriorityMed       = lipgloss.Color("3")
+	Color_Fg_Task_PriorityLow       = lipgloss.Color("4")
+	Color_Bg_UrgentTasks            = lipgloss.Color("236")
+	Color_Fg_UrgentTasks_Date       = lipgloss.Color("4")
+	Color_Fg_UrgentTasks_DateSoon   = lipgloss.Color("3")
+	Color_Fg_UrgentTasks_DateUrgent = lipgloss.Color("1")
 
 	// element colors
 	Color_ActiveFg_Today       = lipgloss.Color("63")

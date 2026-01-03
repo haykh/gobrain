@@ -1,11 +1,13 @@
 package task
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mergestat/timediff"
 
 	"github.com/haykh/gobrain/backend"
 	"github.com/haykh/gobrain/ui"
@@ -73,7 +75,28 @@ func (t Task) View(width int, hover bool) string {
 	if t.is_editing && t.input != nil {
 		text = t.input.View()
 	}
-	line += lipgloss.NewStyle().Foreground(ui.Color_Fg_Braces).Render("] ") + textstyle.Render(text)
+	if !t.DueDate.IsZero() {
+		if time.Now().After(t.DueDate) && !t.Checked {
+			text += " {overdue}"
+		} else if time.Now().Add(30 * 24 * time.Hour).After(t.DueDate) {
+			text += fmt.Sprintf(" {%s}", timediff.TimeDiff(t.DueDate))
+		} else {
+			text += fmt.Sprintf(" {%s}", t.DueDate.Format("Jan 02"))
+		}
+	}
+	line += lipgloss.NewStyle().Foreground(ui.Color_Fg_Braces).Render("] ")
+	if t.Importance > 0 {
+		switch t.Importance {
+		case 1:
+			line += lipgloss.NewStyle().Foreground(ui.Color_Fg_Task_PriorityLow).Render(textstyle.Render(text))
+		case 2:
+			line += lipgloss.NewStyle().Foreground(ui.Color_Fg_Task_PriorityMed).Render(textstyle.Render(text))
+		default:
+			line += lipgloss.NewStyle().Foreground(ui.Color_Fg_Task_PriorityHigh).Render(textstyle.Render(text))
+		}
+	} else {
+		line += textstyle.Render(text)
+	}
 	if hover && !t.is_editing {
 		line += " <"
 	}
