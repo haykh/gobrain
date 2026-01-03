@@ -2,32 +2,122 @@ package backend
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/BurntSushi/toml"
 	"github.com/charmbracelet/bubbles/textinput"
 )
+
+type BackendConfig struct {
+	RemoteRepoURL string
+}
+
+func (bc BackendConfig) OfflineMode() bool {
+	return bc.RemoteRepoURL == ""
+}
 
 type Backend struct {
 	Paths
 	storage Storage
+	config  BackendConfig
 
 	TypingInput textinput.Model
 }
 
-func New(root string) *Backend {
+func New(root, remoteRepoURL string) *Backend {
 	return &Backend{
 		Paths:       NewPaths(root),
 		storage:     localStorage{},
+		config:      BackendConfig{remoteRepoURL},
 		TypingInput: textinput.New(),
 	}
 }
 
-func (b Backend) Init() {
-	if err := b.storage.Ensure(b.Paths); err != nil {
-		panic("Could not create child directory: " + err.Error())
+func (b Backend) Init() error {
+	if !b.config.OfflineMode() {
+		if !b.storage.Exists(b.Root) {
+			if err := CloneGitRepo(b.config.RemoteRepoURL, b.Root); err != nil {
+				return fmt.Errorf("could not clone remote repo: %w", err)
+			}
+		} else {
+			if err := PullGitRepo(b.Root); err != nil {
+				return fmt.Errorf("could not pull remote repo: %w", err)
+			}
+		}
+	} else {
+		if _, err := os.Stat(b.Root); os.IsNotExist(err) {
+			if err := os.MkdirAll(b.Root, os.ModePerm); err != nil {
+				return fmt.Errorf("could not create backend root directory: %w", err)
+			}
+		}
+		if err := InitGitRepo(b.Root); err != nil {
+			return fmt.Errorf("could not init git repo: %w", err)
+		}
 	}
+	if err := b.storage.Ensure(b.Paths); err != nil {
+		return fmt.Errorf("could not ensure backend paths: %w", err)
+	}
+	configPath := filepath.Join(b.Root, "gobrain.toml")
+	if b.storage.Exists(configPath) {
+		if err := b.LoadConfig(configPath); err != nil {
+			return fmt.Errorf("could not load config: %w", err)
+		}
+	}
+	if err := b.SaveConfig(configPath); err != nil {
+		return fmt.Errorf("could not save config: %w", err)
+	}
+	if err := b.Sync(); err != nil {
+		return fmt.Errorf("could not sync backend after init: %w", err)
+	}
+	return nil
+}
+
+func (b Backend) OfflineMode() bool {
+	return b.config.OfflineMode()
+}
+
+func (b *Backend) Sync() error {
+	if err := AddAndCommitGitRepo(b.Root, "Auto-sync changes"); err != nil {
+		return fmt.Errorf("could not commit git repo during sync: %w", err)
+	}
+	if !b.config.OfflineMode() {
+		if err := PullGitRepo(b.Root); err != nil {
+			return fmt.Errorf("could not pull git repo during sync: %w", err)
+		}
+		if err := PushGitRepo(b.Root); err != nil {
+			return fmt.Errorf("could not push git repo during sync: %w", err)
+		}
+	}
+	return nil
+}
+
+func (b Backend) InSync() (bool, error) {
+	return IsCleanGitRepo(b.Root)
+}
+
+func (b *Backend) LoadConfig(path string) error {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("could not read config file: %w", err)
+	}
+	if err := toml.Unmarshal(content, &b.config); err != nil {
+		return fmt.Errorf("could not unmarshal config toml: %w", err)
+	}
+	return nil
+}
+
+func (b Backend) SaveConfig(path string) error {
+	content, err := toml.Marshal(b.config)
+	if err != nil {
+		return fmt.Errorf("could not marshal config toml: %w", err)
+	}
+	if err := os.WriteFile(path, content, 0644); err != nil {
+		return fmt.Errorf("could not write config file: %w", err)
+	}
+	return nil
 }
 
 func (b Backend) GetMarkdownFilenames(path string) ([]string, error) {

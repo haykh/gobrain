@@ -139,6 +139,10 @@ var Key_Back = key.NewBinding(
 	key.WithKeys("backspace"),
 	key.WithHelp("backspace", "back"),
 )
+var Key_Sync = key.NewBinding(
+	key.WithKeys("shift+s", "S"),
+	key.WithHelp("S", "sync"),
+)
 var Key_Help = key.NewBinding(
 	key.WithKeys("?"),
 	key.WithHelp("?", "toggle help"),

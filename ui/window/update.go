@@ -63,9 +63,7 @@ func (w Window) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		}
-
 	} else {
-
 		switch msg := msg.(type) {
 
 		case ui.TypingStartMsg:
@@ -79,7 +77,7 @@ func (w Window) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if msg.NewPanel != w.active_panel {
 				w.active_panel = msg.NewPanel
 				if err := w.panels[w.active_panel].Sync(); err != nil {
-					return nil, func() tea.Msg {
+					return w, func() tea.Msg {
 						return ui.ErrorMsg{Error: err}
 					}
 				}
@@ -96,7 +94,7 @@ func (w Window) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return w, tea.Quit
 			}
 			if err := w.panels[w.active_panel].Sync(); err != nil {
-				return nil, func() tea.Msg {
+				return w, func() tea.Msg {
 					return ui.ErrorMsg{Error: err}
 				}
 			}
@@ -110,7 +108,7 @@ func (w Window) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					glamour.WithWordWrap(glamourRenderWidth),
 				)
 				if err != nil {
-					return nil, func() tea.Msg {
+					return w, func() tea.Msg {
 						return ui.ErrorMsg{Error: err}
 					}
 				}
@@ -119,13 +117,13 @@ func (w Window) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				w.mdviewport = viewport.New(ui.Width_Window-1, ui.Height_Window)
 				content, err := backend.ReadMarkdownNote(msg.Filepath, msg.Filename)
 				if err != nil {
-					return nil, func() tea.Msg {
+					return w, func() tea.Msg {
 						return ui.ErrorMsg{Error: fmt.Errorf("error reading file %s: %w", msg.Filename, err)}
 					}
 				}
 				str, err := renderer.Render(content)
 				if err != nil {
-					return nil, func() tea.Msg {
+					return w, func() tea.Msg {
 						return ui.ErrorMsg{Error: err}
 					}
 				}
@@ -143,7 +141,7 @@ func (w Window) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return w, tea.Quit
 			}
 			if err := w.panels[w.active_panel].Sync(); err != nil {
-				return nil, func() tea.Msg {
+				return w, func() tea.Msg {
 					return ui.ErrorMsg{Error: err}
 				}
 			}
@@ -162,13 +160,30 @@ func (w Window) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if new_panel != w.active_panel {
 						w.active_panel = new_panel
 						if err := w.panels[w.active_panel].Sync(); err != nil {
-							return nil, func() tea.Msg {
+							return w, func() tea.Msg {
 								return ui.ErrorMsg{Error: err}
 							}
 						}
 					}
 				}
 				return w, nil
+
+			case key.Matches(msg, ui.Key_Sync):
+				for _, panel := range w.panels {
+					if err := panel.Sync(); err != nil {
+						return w, func() tea.Msg {
+							return ui.ErrorMsg{Error: err}
+						}
+					}
+				}
+				if err := w.app.Sync(); err != nil {
+					return w, func() tea.Msg {
+						return ui.ErrorMsg{Error: err}
+					}
+				}
+				return w, func() tea.Msg {
+					return ui.DebugMsg{Message: "Synced panels"}
+				}
 
 			case key.Matches(msg, ui.Key_Help):
 				w.help.ShowAll = !w.help.ShowAll

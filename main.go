@@ -42,10 +42,18 @@ func main() {
 				Aliases: []string{"k"},
 				Usage:   "show keybindings",
 			},
+			&cli.StringFlag{
+				Name:    "git",
+				Aliases: []string{"g"},
+				Value:   "",
+				Usage:   "git repo url",
+			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			app := backend.New(cmd.String("home"))
-			app.Init()
+			app := backend.New(cmd.String("home"), cmd.String("git"))
+			if err := app.Init(); err != nil {
+				return fmt.Errorf("could not initialize backend: %v", err)
+			}
 			p := tea.NewProgram(window.New(app, cmd.Bool("keys"), cmd.Bool("debug")))
 			if _, err := p.Run(); err != nil {
 				return fmt.Errorf("could not run program: %v", err)

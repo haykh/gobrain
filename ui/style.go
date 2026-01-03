@@ -16,9 +16,6 @@ const (
 	Color_InactiveBg                = lipgloss.Color("236")
 	Color_ActiveBg                  = lipgloss.Color("57")
 	Color_Dividers                  = lipgloss.Color("245")
-	Color_Fg_Task_PriorityHigh      = lipgloss.Color("1")
-	Color_Fg_Task_PriorityMed       = lipgloss.Color("3")
-	Color_Fg_Task_PriorityLow       = lipgloss.Color("4")
 	Color_Bg_UrgentTasks            = lipgloss.Color("236")
 	Color_Fg_UrgentTasks_Date       = lipgloss.Color("4")
 	Color_Fg_UrgentTasks_DateSoon   = lipgloss.Color("3")
@@ -32,6 +29,11 @@ const (
 	Color_Fg_Datetime          = lipgloss.Color("4")
 	Color_Fg_Weather           = lipgloss.Color("12")
 	Color_Bg_DebugLabel        = lipgloss.Color("124")
+	Color_Fg_RemoteDivider     = lipgloss.Color("245")
+	Color_Fg_RemoteSynced      = lipgloss.Color("34")
+	Color_Fg_RemoteUnsynced    = lipgloss.Color("9")
+	Color_Fg_RemoteOnline      = lipgloss.Color("34")
+	Color_Fg_RemoteOffline     = lipgloss.Color("241")
 
 	// background
 	Color_Bg = lipgloss.Color("236")
@@ -56,6 +58,11 @@ const (
 	//// Formats and strings
 	String_Divider_Time = "⋮"
 	String_Bg           = "⢕"
+	String_Divider_Sync = " "
+	String_Synced       = ""
+	String_Desynced     = ""
+	String_Offline      = ""
+	String_Online       = ""
 	Fmt_Weather         = "%C+%t"
 	Fmt_Time            = "3:04pm"
 	Fmt_Date            = "Mon, Jan 2"
@@ -86,9 +93,12 @@ const (
 	/**
 	* Tasklist Window
 	**/
-	Color_Fg_Tasklist_Done = lipgloss.Color("240")
-	Color_Fg_Checkmark     = lipgloss.Color("34")
-	Color_Fg_Braces        = lipgloss.Color("241")
+	Color_Fg_Tasklist_Done     = lipgloss.Color("240")
+	Color_Fg_Checkmark         = lipgloss.Color("34")
+	Color_Fg_Braces            = lipgloss.Color("241")
+	Color_Fg_Task_PriorityHigh = lipgloss.Color("1")
+	Color_Fg_Task_PriorityMed  = lipgloss.Color("3")
+	Color_Fg_Task_PriorityLow  = lipgloss.Color("4")
 
 	/**
 	 * Common Elements

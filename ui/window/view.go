@@ -130,15 +130,32 @@ func (w Window) StatusView() string {
 		divider_style.Render(ui.String_Divider_Time),
 		datetime_style.Render(date_now))
 
+	remote_text := ""
+	if sync, err := w.app.InSync(); err != nil {
+		panic(err)
+	} else if sync {
+		remote_text = lipgloss.NewStyle().Foreground(ui.Color_Fg_RemoteSynced).Render(ui.String_Synced)
+	} else {
+		remote_text = lipgloss.NewStyle().Foreground(ui.Color_Fg_RemoteUnsynced).Render(ui.String_Desynced)
+	}
+	remote_text += lipgloss.NewStyle().Foreground(ui.Color_Fg_RemoteDivider).Render(" " + ui.String_Divider_Sync + " ")
+	if w.app.OfflineMode() {
+		remote_text += lipgloss.NewStyle().Foreground(ui.Color_Fg_RemoteOffline).Render(ui.String_Offline)
+	} else {
+		remote_text += lipgloss.NewStyle().Foreground(ui.Color_Fg_RemoteOnline).Render(ui.String_Online)
+	}
+
 	weather_style := lipgloss.NewStyle().
 		Foreground(ui.Color_Fg_Weather).
-		MaxWidth(ui.Width_Window - lipgloss.Width(datetime_text) - 1)
+		MaxWidth(ui.Width_Window - lipgloss.Width(datetime_text) - lipgloss.Width(remote_text) - 1)
 
 	weather_text := weather_style.Render(w.weather)
 
-	nspace := ui.Width_Window - lipgloss.Width(weather_text) - lipgloss.Width(datetime_text) - 1
+	nspace := ui.Width_Window - lipgloss.Width(weather_text) - lipgloss.Width(datetime_text) - lipgloss.Width(remote_text) - 1
+	nspace_l := nspace / 3
+	nspace_r := nspace - nspace_l
 	return status_style.Render(
-		datetime_text + strings.Repeat(" ", nspace) + weather_text + " ",
+		datetime_text + strings.Repeat(" ", nspace_l) + remote_text + strings.Repeat(" ", nspace_r) + weather_text + " ",
 	)
 }
 
