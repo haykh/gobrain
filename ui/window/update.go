@@ -2,6 +2,8 @@ package window
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"time"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -13,20 +15,20 @@ import (
 )
 
 func (w *Window) FetchWeather() {
-	// if resp, err := http.Get(fmt.Sprintf("https://wttr.in/?m&format=%s", ui.Fmt_Weather)); err == nil {
-	// 	w.DebugLog("Fetching weather data")
-	// 	defer resp.Body.Close()
-	//
-	// 	body, err := io.ReadAll(resp.Body)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	//
-	// 	w.weather_last_updated = time.Now()
-	// 	w.weather = string(body)
-	// }
-	w.weather_last_updated = time.Now()
-	w.weather = "hello"
+	if resp, err := http.Get(fmt.Sprintf("https://wttr.in/?m&format=%s", ui.Fmt_Weather)); err == nil {
+		w.DebugLog("Fetching weather data")
+		defer resp.Body.Close()
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			panic(err)
+		}
+
+		w.weather_last_updated = time.Now()
+		w.weather = string(body)
+	}
+	// w.weather_last_updated = time.Now()
+	// w.weather = "hello"
 }
 
 func (w Window) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
