@@ -32,6 +32,12 @@ func main() {
 				Value:   default_home,
 				Usage:   "home directory for gobrain",
 			},
+			&cli.StringFlag{
+				Name:    "git",
+				Aliases: []string{"g"},
+				Value:   "",
+				Usage:   "initialize home directory from git repository",
+			},
 			&cli.BoolFlag{
 				Name:    "offline",
 				Aliases: []string{"o"},
@@ -49,9 +55,17 @@ func main() {
 			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			app := backend.New(cmd.String("home"), cmd.Bool("offline"))
-			if err := app.Init(); err != nil {
-				return fmt.Errorf("could not initialize backend: %v", err)
+			var app *backend.Backend
+			var err error
+			if cmd.String("git") != "" {
+				if app, err = backend.InitFromGit(cmd.String("home"), cmd.String("git")); err != nil {
+					return fmt.Errorf("could not initialize from git: %v", err)
+				}
+			} else {
+				app = backend.New(cmd.String("home"), cmd.Bool("offline"))
+				if err = app.Init(); err != nil {
+					return fmt.Errorf("could not initialize backend: %v", err)
+				}
 			}
 			p := tea.NewProgram(window.New(app, cmd.Bool("keys"), cmd.Bool("debug")))
 			if _, err := p.Run(); err != nil {

@@ -38,6 +38,15 @@ func New(root string, offlineMode bool) *Backend {
 	}
 }
 
+func InitFromGit(root, remoteRepoURL string) (*Backend, error) {
+	backend := New(root, false)
+	backend.Config.RemoteRepoURL = remoteRepoURL
+	if err := backend.Init(); err != nil {
+		return nil, fmt.Errorf("could not initialize backend from git: %w", err)
+	}
+	return backend, nil
+}
+
 func (b Backend) Init() error {
 	if !b.offlineMode {
 		if !b.storage.Exists(b.Root) {
