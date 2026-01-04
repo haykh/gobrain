@@ -8,6 +8,9 @@ import (
 )
 
 func (m model) View() string {
+	if len(m.tasklists) == 0 {
+		return ""
+	}
 	lines := []string{}
 	counter := 0
 	counter_visible := 0

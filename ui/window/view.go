@@ -2,6 +2,7 @@ package window
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -105,7 +106,38 @@ func (w Window) BreadcrumbsView() string {
 		breadcrumbs_text += divider_style.Render(" / ")
 		breadcrumbs_text += active_style.Render(w.mdviewport_filename)
 	}
+	remote_text := w.SyncView()
+	nspace := ui.Width_Window - lipgloss.Width(breadcrumbs_text) - lipgloss.Width(remote_text) - 2
+	breadcrumbs_text += strings.Repeat(" ", nspace) + remote_text + " "
+
 	return breadcrumbs_style.Render(breadcrumbs_text)
+}
+
+func (w Window) SyncView() string {
+	remote_text := ""
+	local_root := w.app.Root
+	local_root = strings.Replace(local_root, os.Getenv("HOME"), "~", 1)
+	remote_text += lipgloss.NewStyle().Foreground(ui.Color_Fg_Remote).Render(local_root) + " "
+	if sync, err := w.app.InSync(); err != nil {
+		panic(err)
+	} else if sync {
+		remote_text += lipgloss.NewStyle().Foreground(ui.Color_Fg_RemoteSynced).Render(ui.String_Synced)
+	} else {
+		remote_text += lipgloss.NewStyle().Foreground(ui.Color_Fg_RemoteUnsynced).Render(ui.String_Desynced)
+	}
+	remote_text += lipgloss.NewStyle().Foreground(ui.Color_Fg_RemoteDivider).Render(ui.String_Divider_Sync)
+	if w.app.OfflineMode() {
+		remote_text += lipgloss.NewStyle().Foreground(ui.Color_Fg_RemoteOffline).Render(ui.String_Offline)
+	} else {
+		remote_text += lipgloss.NewStyle().Foreground(ui.Color_Fg_RemoteOnline).Render(ui.String_Online)
+	}
+	if !w.app.OfflineMode() {
+		remote_url := w.app.Config.RemoteRepoURL
+		remote_url = strings.Replace(remote_url, "github.com:", "", 1)
+		remote_url = strings.Replace(remote_url, ".git", "", 1)
+		remote_text += "  " + lipgloss.NewStyle().Foreground(ui.Color_Fg_Remote).Render(remote_url)
+	}
+	return remote_text
 }
 
 func (w Window) StatusView() string {
@@ -130,32 +162,15 @@ func (w Window) StatusView() string {
 		divider_style.Render(ui.String_Divider_Time),
 		datetime_style.Render(date_now))
 
-	remote_text := ""
-	if sync, err := w.app.InSync(); err != nil {
-		panic(err)
-	} else if sync {
-		remote_text = lipgloss.NewStyle().Foreground(ui.Color_Fg_RemoteSynced).Render(ui.String_Synced)
-	} else {
-		remote_text = lipgloss.NewStyle().Foreground(ui.Color_Fg_RemoteUnsynced).Render(ui.String_Desynced)
-	}
-	remote_text += lipgloss.NewStyle().Foreground(ui.Color_Fg_RemoteDivider).Render(" " + ui.String_Divider_Sync + " ")
-	if w.app.OfflineMode() {
-		remote_text += lipgloss.NewStyle().Foreground(ui.Color_Fg_RemoteOffline).Render(ui.String_Offline)
-	} else {
-		remote_text += lipgloss.NewStyle().Foreground(ui.Color_Fg_RemoteOnline).Render(ui.String_Online)
-	}
-
 	weather_style := lipgloss.NewStyle().
 		Foreground(ui.Color_Fg_Weather).
-		MaxWidth(ui.Width_Window - lipgloss.Width(datetime_text) - lipgloss.Width(remote_text) - 1)
+		MaxWidth(ui.Width_Window - lipgloss.Width(datetime_text) - 1)
 
 	weather_text := weather_style.Render(w.weather)
 
-	nspace := ui.Width_Window - lipgloss.Width(weather_text) - lipgloss.Width(datetime_text) - lipgloss.Width(remote_text) - 1
-	nspace_l := nspace / 3
-	nspace_r := nspace - nspace_l
+	nspace := ui.Width_Window - lipgloss.Width(weather_text) - lipgloss.Width(datetime_text) - 1
 	return status_style.Render(
-		datetime_text + strings.Repeat(" ", nspace_l) + remote_text + strings.Repeat(" ", nspace_r) + weather_text + " ",
+		datetime_text + strings.Repeat(" ", nspace) + weather_text + " ",
 	)
 }
 

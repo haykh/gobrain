@@ -7,6 +7,11 @@ import (
 	"github.com/go-git/go-git/v6"
 )
 
+func IsGitRepo(localPath string) bool {
+	_, err := git.PlainOpen(localPath)
+	return err == nil
+}
+
 func CloneGitRepo(remoteURL, localPath string) error {
 	_, err := git.PlainClone(localPath, &git.CloneOptions{
 		URL:      remoteURL,

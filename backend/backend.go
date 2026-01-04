@@ -15,31 +15,33 @@ type BackendConfig struct {
 	RemoteRepoURL string
 }
 
-func (bc BackendConfig) OfflineMode() bool {
-	return bc.RemoteRepoURL == ""
-}
-
 type Backend struct {
 	Paths
-	storage Storage
-	config  BackendConfig
+
+	Config *BackendConfig
+
+	storage     Storage
+	offlineMode bool
 
 	TypingInput textinput.Model
 }
 
-func New(root, remoteRepoURL string) *Backend {
+func New(root string, offlineMode bool) *Backend {
 	return &Backend{
-		Paths:       NewPaths(root),
+		Paths: NewPaths(root),
+
+		Config: &BackendConfig{""},
+
 		storage:     localStorage{},
-		config:      BackendConfig{remoteRepoURL},
+		offlineMode: offlineMode,
 		TypingInput: textinput.New(),
 	}
 }
 
 func (b Backend) Init() error {
-	if !b.config.OfflineMode() {
+	if !b.offlineMode {
 		if !b.storage.Exists(b.Root) {
-			if err := CloneGitRepo(b.config.RemoteRepoURL, b.Root); err != nil {
+			if err := CloneGitRepo(b.Config.RemoteRepoURL, b.Root); err != nil {
 				return fmt.Errorf("could not clone remote repo: %w", err)
 			}
 		} else {
@@ -53,8 +55,10 @@ func (b Backend) Init() error {
 				return fmt.Errorf("could not create backend root directory: %w", err)
 			}
 		}
-		if err := InitGitRepo(b.Root); err != nil {
-			return fmt.Errorf("could not init git repo: %w", err)
+		if !IsGitRepo(b.Root) {
+			if err := InitGitRepo(b.Root); err != nil {
+				return fmt.Errorf("could not init git repo: %w", err)
+			}
 		}
 	}
 	if err := b.storage.Ensure(b.Paths); err != nil {
@@ -65,25 +69,33 @@ func (b Backend) Init() error {
 		if err := b.LoadConfig(configPath); err != nil {
 			return fmt.Errorf("could not load config: %w", err)
 		}
-	}
-	if err := b.SaveConfig(configPath); err != nil {
-		return fmt.Errorf("could not save config: %w", err)
+	} else {
+		if err := b.SaveConfig(configPath); err != nil {
+			return fmt.Errorf("could not save config: %w", err)
+		}
 	}
 	if err := b.Sync(); err != nil {
 		return fmt.Errorf("could not sync backend after init: %w", err)
+	}
+	if !b.offlineMode && b.Config.RemoteRepoURL == "" {
+		return fmt.Errorf("remote repo url is empty in online mode")
 	}
 	return nil
 }
 
 func (b Backend) OfflineMode() bool {
-	return b.config.OfflineMode()
+	return b.offlineMode
 }
+
+// func (b Backend) RemoteRepoURL() string {
+// 	return b.Config.RemoteRepoURL
+// }
 
 func (b *Backend) Sync() error {
 	if err := AddAndCommitGitRepo(b.Root, "Auto-sync changes"); err != nil {
 		return fmt.Errorf("could not commit git repo during sync: %w", err)
 	}
-	if !b.config.OfflineMode() {
+	if !b.OfflineMode() {
 		if err := PullGitRepo(b.Root); err != nil {
 			return fmt.Errorf("could not pull git repo during sync: %w", err)
 		}
@@ -103,14 +115,14 @@ func (b *Backend) LoadConfig(path string) error {
 	if err != nil {
 		return fmt.Errorf("could not read config file: %w", err)
 	}
-	if err := toml.Unmarshal(content, &b.config); err != nil {
+	if err := toml.Unmarshal(content, &b.Config); err != nil {
 		return fmt.Errorf("could not unmarshal config toml: %w", err)
 	}
 	return nil
 }
 
 func (b Backend) SaveConfig(path string) error {
-	content, err := toml.Marshal(b.config)
+	content, err := toml.Marshal(b.Config)
 	if err != nil {
 		return fmt.Errorf("could not marshal config toml: %w", err)
 	}

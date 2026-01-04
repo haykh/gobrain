@@ -29,6 +29,7 @@ const (
 	Color_Fg_Datetime          = lipgloss.Color("4")
 	Color_Fg_Weather           = lipgloss.Color("12")
 	Color_Bg_DebugLabel        = lipgloss.Color("124")
+	Color_Fg_Remote            = lipgloss.Color("236")
 	Color_Fg_RemoteDivider     = lipgloss.Color("245")
 	Color_Fg_RemoteSynced      = lipgloss.Color("34")
 	Color_Fg_RemoteUnsynced    = lipgloss.Color("9")

@@ -33,6 +33,11 @@ func main() {
 				Usage:   "home directory for gobrain",
 			},
 			&cli.BoolFlag{
+				Name:    "offline",
+				Aliases: []string{"o"},
+				Usage:   "offline mode",
+			},
+			&cli.BoolFlag{
 				Name:    "debug",
 				Aliases: []string{"d"},
 				Usage:   "enable debug mode",
@@ -42,15 +47,9 @@ func main() {
 				Aliases: []string{"k"},
 				Usage:   "show keybindings",
 			},
-			&cli.StringFlag{
-				Name:    "git",
-				Aliases: []string{"g"},
-				Value:   "",
-				Usage:   "git repo url",
-			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			app := backend.New(cmd.String("home"), cmd.String("git"))
+			app := backend.New(cmd.String("home"), cmd.Bool("offline"))
 			if err := app.Init(); err != nil {
 				return fmt.Errorf("could not initialize backend: %v", err)
 			}
