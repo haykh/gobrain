@@ -13,12 +13,12 @@
     in
     {
       packages.${system}.default = pkgs.buildGoModule rec {
-        pname = "gobrain";
+        name = "gobrain";
         author = "haykh";
 
         src = pkgs.fetchFromGitHub {
           owner = author;
-          repo = pname;
+          repo = name;
           rev = "master";
           hash = "sha256-LP2q6O+2ApAC3VWjGKbviVJQ6uLwFOkAvdtFRHiSJ4c=";
         };
