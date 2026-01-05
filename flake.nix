@@ -14,7 +14,7 @@
     {
       packages.${system}.default = pkgs.buildGoModule rec {
         pname = "gobrain";
-        version = "1.0.0";
+        version = "1.0.1";
         author = "haykh";
 
         src = pkgs.fetchFromGitHub {

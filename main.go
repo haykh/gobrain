@@ -24,7 +24,7 @@ func main() {
 	cmd := &cli.Command{
 		Name:    "gobrain",
 		Usage:   "a terminal-based notes and tasks organizer",
-		Version: "v1.0.0",
+		Version: "v1.0.1",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "home",
