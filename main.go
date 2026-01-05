@@ -23,7 +23,7 @@ func main() {
 	default_home := filepath.Join(usr.HomeDir, ".gobrain")
 	cmd := &cli.Command{
 		Name:    "gobrain",
-		Usage:   "a terminal-based notes organizer",
+		Usage:   "a terminal-based notes and tasks organizer",
 		Version: "v1.0.0",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
