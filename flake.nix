@@ -21,7 +21,7 @@
           owner = author;
           repo = pname;
           rev = "v${version}";
-          hash = "sha256-Ye51PZ3jLUfaeD1iffrESFbXRzKPDJUEezVpqlk8EXs=";
+          hash = "sha256-AJCaxC7exwF7+jKsiyLd9kvamZeA/HKGyM50cYrFvpA=";
         };
 
         vendorHash = "sha256-7mqgCcfy+VTOnCAPJmHWnVQL/7KAAzlVh0aHh/D0u4I=";
