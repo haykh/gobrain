@@ -21,10 +21,10 @@
           owner = author;
           repo = pname;
           rev = "v${version}";
-          hash = "sha256-AJCaxC7exwF7+jKsiyLd9kvamZeA/HKGyM50cYrFvpA=";
+          hash = "sha256-LP2q6O+2ApAC3VWjGKbviVJQ6uLwFOkAvdtFRHiSJ4c=";
         };
 
-        vendorHash = "sha256-7mqgCcfy+VTOnCAPJmHWnVQL/7KAAzlVh0aHh/D0u4I=";
+        vendorHash = "sha256-AfdgJceYwgZB0lVpVRWYoGkbBQWWCV+FHx33Ru7lCUM=";
 
         meta = with pkgs.lib; {
           homepage = "https://github.com/${author}/gobrain";
