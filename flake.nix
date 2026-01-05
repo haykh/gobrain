@@ -21,10 +21,10 @@
           owner = author;
           repo = pname;
           rev = "v${version}";
-          hash = "sha256-ItkpkZIhA9a6QgxFVSNN9YGQoML6NT4uoiu9aLsZI9o=";
+          hash = "sha256-Ye51PZ3jLUfaeD1iffrESFbXRzKPDJUEezVpqlk8EXs=";
         };
 
-        vendorHash = "sha256-9aIcu1BImY7+IdNEVb3acgdM3kBamKrWVOyUnaSZXZk=";
+        vendorHash = "sha256-7mqgCcfy+VTOnCAPJmHWnVQL/7KAAzlVh0aHh/D0u4I=";
 
         meta = with pkgs.lib; {
           description = "go-based tool to do awesome stuff with notion";
