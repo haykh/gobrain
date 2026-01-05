@@ -14,13 +14,12 @@
     {
       packages.${system}.default = pkgs.buildGoModule rec {
         pname = "gobrain";
-        version = "1.0.2";
         author = "haykh";
 
         src = pkgs.fetchFromGitHub {
           owner = author;
           repo = pname;
-          rev = "v${version}";
+          rev = "master";
           hash = "sha256-LP2q6O+2ApAC3VWjGKbviVJQ6uLwFOkAvdtFRHiSJ4c=";
         };
 
