@@ -3,95 +3,46 @@ package backend
 import (
 	"fmt"
 	"os"
-
-	"github.com/go-git/go-git/v6"
+	"os/exec"
 )
 
 func IsGitRepo(localPath string) bool {
-	_, err := git.PlainOpen(localPath)
-	return err == nil
+	gitDir := fmt.Sprintf("%s/.git", localPath)
+	info, err := os.Stat(gitDir)
+	if err != nil {
+		return false
+	}
+	return info.IsDir()
 }
 
 func CloneGitRepo(remoteURL, localPath string) error {
-	_, err := git.PlainClone(localPath, &git.CloneOptions{
-		URL:      remoteURL,
-		Progress: os.Stdout,
-	})
-
-	return err
+	cmd := exec.Command("git", "clone", remoteURL, localPath)
+	return cmd.Run()
 }
 
-func PullGitRepo(localPath string) error {
-	repo, err := git.PlainOpen(localPath)
-	if err != nil {
-		return err
-	}
-
-	w, err := repo.Worktree()
-	if err != nil {
-		return err
-	}
-
-	err = w.Pull(&git.PullOptions{RemoteName: "origin"})
-	if err != nil && err != git.NoErrAlreadyUpToDate {
-		return err
-	}
-
-	return nil
+func FetchGitRepo(localPath string) error {
+	cmd := exec.Command("git", "-C", localPath, "fetch")
+	return cmd.Run()
 }
 
 func PushGitRepo(localPath string) error {
-	repo, err := git.PlainOpen(localPath)
-	if err != nil {
-		return err
-	}
-
-	err = repo.Push(&git.PushOptions{})
-	if err != nil && err != git.NoErrAlreadyUpToDate {
-		return err
-	}
-
-	return nil
+	cmd := exec.Command("git", "-C", localPath, "push")
+	return cmd.Run()
 }
 
 func AddAndCommitGitRepo(localPath, message string) error {
-	repo, err := git.PlainOpen(localPath)
-
-	if err != nil {
-		return err
+	cmdAdd := exec.Command("git", "-C", localPath, "add", ".")
+	if err := cmdAdd.Run(); err != nil {
+		return fmt.Errorf("could not add changes: %w", err)
 	}
 
-	if repo == nil {
-		return fmt.Errorf("repository not found at %s", localPath)
-	}
-
-	w, err := repo.Worktree()
-
-	if err != nil {
-		return err
-	}
-
-	if w == nil {
-		return fmt.Errorf("worktree not found at %s", localPath)
-	}
-
-	status, err := w.Status()
-
-	if err != nil {
-		return err
-	}
-
-	if status.IsClean() {
-		return nil
-	}
-
-	_, err = w.Add(".")
-	if err != nil {
-		return err
-	}
-
-	_, err = w.Commit(message, &git.CommitOptions{})
-	if err != nil {
+	cmdCommit := exec.Command("git", "-C", localPath, "commit", "-m", message)
+	if err := cmdCommit.Run(); err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			if exitError.ExitCode() == 1 {
+				return nil
+			}
+		}
 		return fmt.Errorf("could not commit changes: %w", err)
 	}
 
@@ -99,25 +50,37 @@ func AddAndCommitGitRepo(localPath, message string) error {
 }
 
 func IsCleanGitRepo(localPath string) (bool, error) {
-	repo, err := git.PlainOpen(localPath)
+	cmd := exec.Command("git", "-C", localPath, "status", "--porcelain")
+	output, err := cmd.Output()
 	if err != nil {
 		return false, err
 	}
 
-	w, err := repo.Worktree()
-	if err != nil {
-		return false, err
-	}
-
-	status, err := w.Status()
-	if err != nil {
-		return false, err
-	}
-
-	return status.IsClean(), nil
+	return len(output) == 0, nil
 }
 
 func InitGitRepo(localPath string) error {
-	_, err := git.PlainInit(localPath, false)
-	return err
+	cmd := exec.Command("git", "init", localPath)
+	return cmd.Run()
+}
+
+func CheckGitAhead(localPath string) (bool, error) {
+	cmd := exec.Command("git", "-C", localPath, "status", "-s")
+	output, err := cmd.Output()
+	if err != nil {
+		return false, err
+	}
+	return len(output) > 0, nil
+}
+
+func CheckGitBehind(localPath string) (bool, error) {
+	if err := FetchGitRepo(localPath); err != nil {
+		return false, err
+	}
+	cmd := exec.Command("git", "-C", localPath, "log", "--oneline", "HEAD..origin/master")
+	output, err := cmd.Output()
+	if err != nil {
+		return false, err
+	}
+	return len(output) > 0, nil
 }

@@ -94,20 +94,25 @@ func (w Window) BreadcrumbsView() string {
 		Foreground(ui.Color_ActiveFg_Breadcrumbs)
 
 	breadcrumbs_text := ""
-	for i, part := range w.Active().Path() {
-		breadcrumbs_text += divider_style.Render(" / ")
-		if i == len(w.Active().Path())-1 && !w.mdviewport_show {
-			breadcrumbs_text += active_style.Render(part)
-		} else {
-			breadcrumbs_text += element_style.Render(part)
+	if !w.mdviewport_show {
+		for i, part := range w.Active().Path() {
+			breadcrumbs_text += divider_style.Render(" / ")
+			if i == len(w.Active().Path())-1 && !w.mdviewport_show {
+				breadcrumbs_text += active_style.Render(part)
+			} else {
+				breadcrumbs_text += element_style.Render(part)
+			}
 		}
-	}
-	if w.mdviewport_show {
-		breadcrumbs_text += divider_style.Render(" / ")
+	} else {
+		breadcrumbs_text += divider_style.Render("... / ")
 		breadcrumbs_text += active_style.Render(w.mdviewport_filename)
 	}
 	remote_text := w.SyncView()
 	nspace := ui.Width_Window - lipgloss.Width(breadcrumbs_text) - lipgloss.Width(remote_text) - 2
+	if nspace < 0 {
+		breadcrumbs_text = lipgloss.NewStyle().Width(ui.Width_Window - lipgloss.Width(remote_text) - 5).Render(breadcrumbs_text)
+		nspace = 0
+	}
 	breadcrumbs_text += strings.Repeat(" ", nspace) + remote_text + " "
 
 	return breadcrumbs_style.Render(breadcrumbs_text)
@@ -118,12 +123,18 @@ func (w Window) SyncView() string {
 	local_root := w.app.Root
 	local_root = strings.Replace(local_root, os.Getenv("HOME"), "~", 1)
 	remote_text += lipgloss.NewStyle().Foreground(ui.Color_Fg_Remote).Render(local_root) + " "
-	if sync, err := w.app.InSync(); err != nil {
+	if ahead, err := w.app.CheckAhead(); err != nil {
 		panic(err)
-	} else if sync {
-		remote_text += lipgloss.NewStyle().Foreground(ui.Color_Fg_RemoteSynced).Render(ui.String_Synced)
 	} else {
-		remote_text += lipgloss.NewStyle().Foreground(ui.Color_Fg_RemoteUnsynced).Render(ui.String_Desynced)
+		if ahead {
+			remote_text += lipgloss.NewStyle().Foreground(ui.Color_Fg_RemoteUnsynced).Render(ui.String_Ahead)
+		}
+		if w.app.IsBehind && !w.app.OfflineMode() {
+			remote_text += lipgloss.NewStyle().Foreground(ui.Color_Fg_RemoteUnsynced).Render(ui.String_Behind)
+		}
+		if !ahead && (!w.app.IsBehind || w.app.OfflineMode()) {
+			remote_text += lipgloss.NewStyle().Foreground(ui.Color_Fg_RemoteSynced).Render(ui.String_Synced)
+		}
 	}
 	remote_text += lipgloss.NewStyle().Foreground(ui.Color_Fg_RemoteDivider).Render(ui.String_Divider_Sync)
 	if w.app.OfflineMode() {

@@ -62,6 +62,8 @@ const (
 	String_Divider_Sync = " "
 	String_Synced       = ""
 	String_Desynced     = ""
+	String_Behind       = ""
+	String_Ahead        = ""
 	String_Offline      = ""
 	String_Online       = ""
 	Fmt_Weather         = "%C+%t"

@@ -3,7 +3,7 @@
 }:
 
 let
-  name = "gopop";
+  name = "gobrain";
 in
 pkgs.mkShell ({
   name = "${name}-env";
@@ -18,7 +18,7 @@ pkgs.mkShell ({
     pkg-config
     makeWrapper
     gtk3
-    webkitgtk_4_0
+    webkitgtk_4_1
 
     nodePackages.nodejs
     vscode-langservers-extracted

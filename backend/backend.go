@@ -22,6 +22,7 @@ type Backend struct {
 
 	storage     Storage
 	offlineMode bool
+	IsBehind    bool
 
 	TypingInput textinput.Model
 }
@@ -34,6 +35,8 @@ func New(root string, offlineMode bool) *Backend {
 
 		storage:     localStorage{},
 		offlineMode: offlineMode,
+		IsBehind:    false,
+
 		TypingInput: textinput.New(),
 	}
 }
@@ -54,7 +57,7 @@ func (b Backend) Init() error {
 				return fmt.Errorf("could not clone remote repo: %w", err)
 			}
 		} else {
-			if err := PullGitRepo(b.Root); err != nil {
+			if err := FetchGitRepo(b.Root); err != nil {
 				return fmt.Errorf("could not pull remote repo: %w", err)
 			}
 		}
@@ -83,11 +86,13 @@ func (b Backend) Init() error {
 			return fmt.Errorf("could not save config: %w", err)
 		}
 	}
-	if err := b.Sync(); err != nil {
-		return fmt.Errorf("could not sync backend after init: %w", err)
-	}
 	if !b.offlineMode && b.Config.RemoteRepoURL == "" {
 		return fmt.Errorf("remote repo url is empty in online mode")
+	}
+	if !b.offlineMode {
+		if err := b.CheckBehind(); err != nil {
+			return fmt.Errorf("could not check git behind status during init: %w", err)
+		}
 	}
 	return nil
 }
@@ -96,18 +101,16 @@ func (b Backend) OfflineMode() bool {
 	return b.offlineMode
 }
 
-// func (b Backend) RemoteRepoURL() string {
-// 	return b.Config.RemoteRepoURL
-// }
-
-func (b *Backend) Sync() error {
+func (b *Backend) SyncUp() error {
+	if ahead, err := b.CheckAhead(); err != nil {
+		return fmt.Errorf("could not check git ahead status during sync: %w", err)
+	} else if !ahead {
+		return nil
+	}
 	if err := AddAndCommitGitRepo(b.Root, "Auto-sync changes"); err != nil {
 		return fmt.Errorf("could not commit git repo during sync: %w", err)
 	}
 	if !b.OfflineMode() {
-		if err := PullGitRepo(b.Root); err != nil {
-			return fmt.Errorf("could not pull git repo during sync: %w", err)
-		}
 		if err := PushGitRepo(b.Root); err != nil {
 			return fmt.Errorf("could not push git repo during sync: %w", err)
 		}
@@ -115,9 +118,51 @@ func (b *Backend) Sync() error {
 	return nil
 }
 
-func (b Backend) InSync() (bool, error) {
-	return IsCleanGitRepo(b.Root)
+func (b *Backend) SyncDown() error {
+	if !b.OfflineMode() {
+		if err := b.CheckBehind(); err != nil {
+			return fmt.Errorf("could not check git behind status during sync: %w", err)
+		}
+		if !b.IsBehind {
+			return nil
+		}
+		if err := FetchGitRepo(b.Root); err != nil {
+			return fmt.Errorf("could not fetch git repo during sync: %w", err)
+		}
+	}
+	return nil
 }
+
+func (b *Backend) Sync() error {
+	if err := b.SyncDown(); err != nil {
+		return fmt.Errorf("could not sync down: %w", err)
+	}
+	if err := b.SyncUp(); err != nil {
+		return fmt.Errorf("could not sync up: %w", err)
+	}
+	return nil
+}
+
+func (b Backend) CheckAhead() (bool, error) {
+	if ahead, err := CheckGitAhead(b.Root); err != nil {
+		return false, err
+	} else {
+		return ahead, nil
+	}
+}
+
+func (b *Backend) CheckBehind() error {
+	if behind, err := CheckGitBehind(b.Root); err != nil {
+		return err
+	} else {
+		b.IsBehind = behind
+		return nil
+	}
+}
+
+// func (b Backend) InSync() (bool, error) {
+// 	return IsCleanGitRepo(b.Root)
+// }
 
 func (b *Backend) LoadConfig(path string) error {
 	content, err := os.ReadFile(path)

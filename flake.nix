@@ -14,7 +14,7 @@
     {
       packages.${system}.default = pkgs.buildGoModule rec {
         pname = "gobrain";
-        version = "1.0.1";
+        version = "1.0.2";
         author = "haykh";
 
         src = pkgs.fetchFromGitHub {
@@ -27,8 +27,7 @@
         vendorHash = "sha256-7mqgCcfy+VTOnCAPJmHWnVQL/7KAAzlVh0aHh/D0u4I=";
 
         meta = with pkgs.lib; {
-          description = "go-based tool to do awesome stuff with notion";
-          homepage = "https://github.com/${author}/nogo";
+          homepage = "https://github.com/${author}/gobrain";
           license = licenses.unlicense;
           maintainers = [ author ];
         };
