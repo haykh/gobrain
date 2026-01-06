@@ -126,8 +126,8 @@ func (b *Backend) SyncDown() error {
 		if !b.IsBehind {
 			return nil
 		}
-		if err := FetchGitRepo(b.Root); err != nil {
-			return fmt.Errorf("could not fetch git repo during sync: %w", err)
+		if err := PullGitRepo(b.Root); err != nil {
+			return fmt.Errorf("could not pull git repo during sync: %w", err)
 		}
 	}
 	return nil
@@ -152,17 +152,13 @@ func (b Backend) CheckAhead() (bool, error) {
 }
 
 func (b *Backend) CheckBehind() error {
-	if behind, err := CheckGitBehind(b.Root); err != nil {
+	if not_behind, err := CheckGitBehind(b.Root); err != nil {
 		return err
 	} else {
-		b.IsBehind = behind
+		b.IsBehind = !not_behind
 		return nil
 	}
 }
-
-// func (b Backend) InSync() (bool, error) {
-// 	return IsCleanGitRepo(b.Root)
-// }
 
 func (b *Backend) LoadConfig(path string) error {
 	content, err := os.ReadFile(path)
