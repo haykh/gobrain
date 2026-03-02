@@ -140,6 +140,7 @@ func (b *Backend) Sync() error {
 	if err := b.SyncUp(); err != nil {
 		return fmt.Errorf("could not sync up: %w", err)
 	}
+	b.IsBehind = false
 	return nil
 }
 

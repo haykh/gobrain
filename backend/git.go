@@ -31,7 +31,7 @@ func PullGitRepo(localPath string) error {
 }
 
 func PushGitRepo(localPath string) error {
-	cmd := exec.Command("git", "-C", localPath, "push")
+	cmd := exec.Command("git", "-C", localPath, "push", "-f")
 	return cmd.Run()
 }
 
