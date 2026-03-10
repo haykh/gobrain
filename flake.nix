@@ -20,7 +20,7 @@
           owner = author;
           repo = name;
           rev = "master";
-          hash = "sha256-IxAanYJ0vNoawFeFz1Qx1jnOd6/AEdShdTUXT83t4fw=";
+          hash = "sha256-KGGgXZgy6Un/YW22Kbl39PMGyY2j7PmxhFPjCY24iyY=";
         };
 
         vendorHash = "sha256-AfdgJceYwgZB0lVpVRWYoGkbBQWWCV+FHx33Ru7lCUM=";
