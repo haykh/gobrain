@@ -15,7 +15,7 @@
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        pkgs = import nixpkgs { stdenv.hostPlatform.system = system; };
+        pkgs = import nixpkgs { inherit system; };
 
         pname = "gobrain";
         version = "1.0.4";
@@ -26,7 +26,7 @@
           owner = author;
           repo = pname;
           rev = "master";
-          hash = "sha256-KGGgXZgy6Un/YW22Kbl39PMGyY2j7PmxhFPjCY24iyY=";
+          hash = "sha256-V2ToDRnrOq4hul/h8iN5VS9YZLM0mlOcEw907m8WOvg=";
         };
       in
       {
