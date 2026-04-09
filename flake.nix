@@ -18,7 +18,7 @@
         pkgs = import nixpkgs { stdenv.hostPlatform.system = system; };
 
         pname = "gobrain";
-        version = "1.4.0";
+        version = "1.0.4";
         author = "haykh";
 
         src = pkgs.fetchFromGitHub {
